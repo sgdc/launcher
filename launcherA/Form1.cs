@@ -46,6 +46,8 @@ namespace launcherA
 
         bool shouldUpdate = false;
 
+        bool attract = false;
+
         public SGDCLauncher()
         {
             InitializeComponent();
@@ -79,32 +81,46 @@ namespace launcherA
                 Environment.Exit(1);
             }
 
-            try
+            if (File.Exists(Directory.GetCurrentDirectory() + "\\config.json"))
             {
-                string message = "";
-                foreach (string line in File.ReadLines(Directory.GetCurrentDirectory() + "\\message.txt"))
+                //we have a config
+                string config = "";
+                foreach (string line in File.ReadAllLines(Directory.GetCurrentDirectory() + "\\config.json"))
                 {
-                    message += line + "\n";
+                    config += line;
                 }
-                lblMessage.Text = message;
-            } catch (Exception)
-            {
-                lblMessage.Text = "Failed loading message from message.txt. Make sure message.txt exists in the launcher directory.";
-
-            }
-
-            try
-            {
-                string subtitle = "";
-                foreach (string line in File.ReadLines(Directory.GetCurrentDirectory() + "\\subtitle.txt"))
+                Console.WriteLine(config);
+                Config c = JsonConvert.DeserializeObject<Config>(config);
+                if (c.message != null && c.message != "") //if a message is set
                 {
-                    subtitle += line;
+                    lblMessage.Text = c.message;
                 }
-                lblSubtitle.Text = subtitle + "\n\nGames:";
-            } catch (Exception)
-            {
-                File.WriteAllLines(Directory.GetCurrentDirectory() + "\\error.txt", new string[] { "subtitle.txt does not exist." });
-                lblSubtitle.Text = "Subtitle\n\nGames:";
+
+                if (c.subtitle != null && c.subtitle != "") //if a subtitle is set
+                {
+                    lblSubtitle.Text = c.subtitle + "\n\nGames:";
+                }
+
+                if (c.attractActivate > 1000) //has to be at least 1 second; how long you wait with no input until activating attract mode
+                {
+                    tmrAttractWait.Interval = c.attractActivate;
+                    tmrAttractWait.Stop();
+                    tmrAttractWait.Start();
+                }
+
+                if (c.attractScroll > 100)
+                {
+                    tmrAttract.Interval = c.attractScroll;
+                    tmrAttract.Stop();
+                    tmrAttract.Start();
+                }
+
+                if (c.startBlink > 0)
+                {
+                    tmrBlink.Interval = c.startBlink;
+                    tmrBlink.Stop();
+                    tmrBlink.Start();
+                }
             }
 
             if (File.Exists(Directory.GetCurrentDirectory() + "\\logo.png"))
@@ -175,7 +191,7 @@ namespace launcherA
                 }
                 else if (keyData == Keys.Down)
                 {
-                    eventDown();
+                    eventDown(false);
                     return true;
                 }
                 else if (keyData == Keys.Enter || keyData == Keys.Space)
@@ -193,6 +209,7 @@ namespace launcherA
         {
             if (runningProcess == null)
             {
+                resetAttract();
                 selected -= 1;
                 if (selected < 0)
                     selected = gamesList.Count - 1;
@@ -201,10 +218,12 @@ namespace launcherA
             }
         }
 
-        void eventDown() //pressed down
+        void eventDown(bool auto) //pressed down
         {
             if (runningProcess == null)
             {
+                if (!auto)
+                    resetAttract();
                 selected += 1;
                 if (selected > gamesList.Count - 1)
                     selected = 0;
@@ -217,6 +236,7 @@ namespace launcherA
         {
             if (runningProcess == null)
             {
+                resetAttract();
                 try
                 {
                     if (gamesList[selected].exeName != null && gamesList[selected].exeName != "" && gamesList[selected].exeName.Contains("."))
@@ -253,6 +273,14 @@ namespace launcherA
         {
             runningProcess = null;
             updateGamePlayedTime();
+        }
+
+        void resetAttract()
+        {
+            attract = false;
+            tmrAttractWait.Stop();
+            tmrAttractWait.Start();
+            Console.WriteLine("Reset attract.");
         }
         
         void updateGamePlayedTime() //on game close, update the time, save it to file, and queue a screen update
@@ -376,7 +404,7 @@ namespace launcherA
             if (didUp)
                 eventUp();
             if (didDown)
-                eventDown();
+                eventDown(false);
             if (didStart)
                 eventStart();
         }
@@ -433,6 +461,22 @@ namespace launcherA
                 }
             }
         }
+
+        private void tmrAttract_Tick(object sender, EventArgs e)
+        {
+            Console.WriteLine("Got attract tick");
+            if (attract && (runningProcess == null || runningProcess.HasExited))
+            {
+                Console.WriteLine("eventDown time");
+                eventDown(true);
+            }
+        }
+
+        private void tmrAttractWait_Tick(object sender, EventArgs e)
+        {
+            attract = true;
+            Console.WriteLine("Attract = true");
+        }
     }
 
 
@@ -447,5 +491,14 @@ namespace launcherA
         public string devs { get; set; }
         public int plays { get; set; }
         public int time { get; set; }
+    }
+
+    public class Config
+    {
+        public string message { get; set; }
+        public string subtitle { get; set; }
+        public int attractActivate { get; set; }
+        public int attractScroll { get; set; }
+        public int startBlink { get; set; }
     }
 }

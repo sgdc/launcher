@@ -42,6 +42,8 @@
             this.tmrBlink = new System.Windows.Forms.Timer(this.components);
             this.lblPlays = new System.Windows.Forms.Label();
             this.tmrController = new System.Windows.Forms.Timer(this.components);
+            this.tmrAttract = new System.Windows.Forms.Timer(this.components);
+            this.tmrAttractWait = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mpVideo)).BeginInit();
             this.SuspendLayout();
@@ -173,6 +175,18 @@
             this.tmrController.Interval = 1;
             this.tmrController.Tick += new System.EventHandler(this.tmrController_Tick);
             // 
+            // tmrAttract
+            // 
+            this.tmrAttract.Enabled = true;
+            this.tmrAttract.Interval = 10000;
+            this.tmrAttract.Tick += new System.EventHandler(this.tmrAttract_Tick);
+            // 
+            // tmrAttractWait
+            // 
+            this.tmrAttractWait.Enabled = true;
+            this.tmrAttractWait.Interval = 45000;
+            this.tmrAttractWait.Tick += new System.EventHandler(this.tmrAttractWait_Tick);
+            // 
             // SGDCLauncher
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -210,6 +224,8 @@
         private System.Windows.Forms.Timer tmrBlink;
         private System.Windows.Forms.Label lblPlays;
         private System.Windows.Forms.Timer tmrController;
+        private System.Windows.Forms.Timer tmrAttract;
+        private System.Windows.Forms.Timer tmrAttractWait;
     }
 }
 
