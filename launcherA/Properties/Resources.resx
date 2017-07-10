@@ -121,4 +121,7 @@
   <data name="SGDC logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SGDC logo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="hip-square" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hip-square.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

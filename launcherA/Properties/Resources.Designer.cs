@@ -63,6 +63,16 @@ namespace launcherA.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap hip_square {
+            get {
+                object obj = ResourceManager.GetObject("hip-square", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap SGDC_logo {
             get {
                 object obj = ResourceManager.GetObject("SGDC logo", resourceCulture);

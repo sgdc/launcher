@@ -1,6 +1,6 @@
 ﻿namespace launcherA
 {
-    partial class Form1
+    partial class SGDCLauncher
     {
         /// <summary>
         /// Required designer variable.
@@ -28,32 +28,43 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SGDCLauncher));
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.lblTitle = new System.Windows.Forms.Label();
             this.lblDesc = new System.Windows.Forms.Label();
             this.lblList = new System.Windows.Forms.Label();
-            this.picGif = new System.Windows.Forms.PictureBox();
+            this.mpVideo = new AxWMPLib.AxWindowsMediaPlayer();
+            this.lblPressStart = new System.Windows.Forms.Label();
+            this.lblDevs = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tmrBlink = new System.Windows.Forms.Timer(this.components);
+            this.lblPlays = new System.Windows.Forms.Label();
+            this.tmrController = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picGif)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mpVideo)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
             // 
+            this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
             this.pictureBox1.BackgroundImage = global::launcherA.Properties.Resources.SGDC_logo;
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.pictureBox1.Location = new System.Drawing.Point(12, 12);
+            this.pictureBox1.Location = new System.Drawing.Point(12, 40);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(341, 101);
+            this.pictureBox1.Size = new System.Drawing.Size(522, 166);
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
             // 
             // lblTitle
             // 
             this.lblTitle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblTitle.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 48F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTitle.Location = new System.Drawing.Point(511, 9);
+            this.lblTitle.BackColor = System.Drawing.Color.Transparent;
+            this.lblTitle.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 42F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTitle.Location = new System.Drawing.Point(574, 9);
             this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(741, 135);
+            this.lblTitle.Size = new System.Drawing.Size(959, 117);
             this.lblTitle.TabIndex = 3;
             this.lblTitle.Text = "Game Name";
             this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -61,49 +72,127 @@
             // lblDesc
             // 
             this.lblDesc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblDesc.BackColor = System.Drawing.Color.Transparent;
             this.lblDesc.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDesc.Location = new System.Drawing.Point(626, 467);
+            this.lblDesc.Location = new System.Drawing.Point(565, 754);
             this.lblDesc.Name = "lblDesc";
-            this.lblDesc.Size = new System.Drawing.Size(496, 184);
+            this.lblDesc.Size = new System.Drawing.Size(968, 172);
             this.lblDesc.TabIndex = 4;
             this.lblDesc.Text = "This is a placeholder description.";
-            this.lblDesc.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblDesc.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // lblList
             // 
-            this.lblList.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblList.Location = new System.Drawing.Point(12, 121);
+            this.lblList.BackColor = System.Drawing.Color.Transparent;
+            this.lblList.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblList.Location = new System.Drawing.Point(12, 321);
             this.lblList.Name = "lblList";
-            this.lblList.Size = new System.Drawing.Size(341, 551);
+            this.lblList.Size = new System.Drawing.Size(522, 739);
             this.lblList.TabIndex = 5;
             this.lblList.Text = "Game A\r\nGame B\r\nGame C\r\nGame D\r\n> Game E <\r\nGame F\r\nGame G";
             this.lblList.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
-            // picGif
+            // mpVideo
             // 
-            this.picGif.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.picGif.Location = new System.Drawing.Point(639, 194);
-            this.picGif.Name = "picGif";
-            this.picGif.Size = new System.Drawing.Size(480, 270);
-            this.picGif.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picGif.TabIndex = 6;
-            this.picGif.TabStop = false;
+            this.mpVideo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.mpVideo.Enabled = true;
+            this.mpVideo.Location = new System.Drawing.Point(565, 129);
+            this.mpVideo.Name = "mpVideo";
+            this.mpVideo.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("mpVideo.OcxState")));
+            this.mpVideo.Size = new System.Drawing.Size(968, 546);
+            this.mpVideo.TabIndex = 8;
             // 
-            // Form1
+            // lblPressStart
+            // 
+            this.lblPressStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblPressStart.BackColor = System.Drawing.Color.Transparent;
+            this.lblPressStart.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 71.99999F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPressStart.Location = new System.Drawing.Point(565, 879);
+            this.lblPressStart.Name = "lblPressStart";
+            this.lblPressStart.Size = new System.Drawing.Size(968, 137);
+            this.lblPressStart.TabIndex = 9;
+            this.lblPressStart.Text = "Press Start";
+            this.lblPressStart.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblDevs
+            // 
+            this.lblDevs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblDevs.BackColor = System.Drawing.Color.Transparent;
+            this.lblDevs.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDevs.Location = new System.Drawing.Point(560, 701);
+            this.lblDevs.Name = "lblDevs";
+            this.lblDevs.Size = new System.Drawing.Size(973, 35);
+            this.lblDevs.TabIndex = 10;
+            this.lblDevs.Text = "By: Adam Gincel";
+            this.lblDevs.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label1
+            // 
+            this.label1.BackColor = System.Drawing.Color.Transparent;
+            this.label1.Font = new System.Drawing.Font("NK57 Monospace Sc Bk", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(12, 206);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(522, 101);
+            this.label1.TabIndex = 11;
+            this.label1.Text = "Jacobus Arcade Machine\r\n\r\nGames:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.BackColor = System.Drawing.Color.Transparent;
+            this.label2.Font = new System.Drawing.Font("NK57 Monospace Sc Bk", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(1564, 40);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(300, 976);
+            this.label2.TabIndex = 12;
+            this.label2.Text = resources.GetString("label2.Text");
+            this.label2.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // tmrBlink
+            // 
+            this.tmrBlink.Enabled = true;
+            this.tmrBlink.Interval = 850;
+            this.tmrBlink.Tick += new System.EventHandler(this.tmrBlink_Tick);
+            // 
+            // lblPlays
+            // 
+            this.lblPlays.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblPlays.BackColor = System.Drawing.Color.Transparent;
+            this.lblPlays.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPlays.Location = new System.Drawing.Point(562, 733);
+            this.lblPlays.Name = "lblPlays";
+            this.lblPlays.Size = new System.Drawing.Size(971, 35);
+            this.lblPlays.TabIndex = 13;
+            this.lblPlays.Text = "Plays: 0      Time Played: 00:00";
+            this.lblPlays.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tmrController
+            // 
+            this.tmrController.Enabled = true;
+            this.tmrController.Interval = 1;
+            this.tmrController.Tick += new System.EventHandler(this.tmrController_Tick);
+            // 
+            // SGDCLauncher
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.ClientSize = new System.Drawing.Size(1264, 681);
-            this.Controls.Add(this.picGif);
+            this.BackgroundImage = global::launcherA.Properties.Resources.hip_square;
+            this.ClientSize = new System.Drawing.Size(1904, 1041);
+            this.Controls.Add(this.lblPlays);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.lblDevs);
+            this.Controls.Add(this.lblPressStart);
+            this.Controls.Add(this.mpVideo);
             this.Controls.Add(this.lblList);
             this.Controls.Add(this.lblDesc);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.pictureBox1);
-            this.Name = "Form1";
+            this.Name = "SGDCLauncher";
             this.Text = "SGDC Launcher";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picGif)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mpVideo)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -113,7 +202,14 @@
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Label lblDesc;
         private System.Windows.Forms.Label lblList;
-        private System.Windows.Forms.PictureBox picGif;
+        private AxWMPLib.AxWindowsMediaPlayer mpVideo;
+        private System.Windows.Forms.Label lblPressStart;
+        private System.Windows.Forms.Label lblDevs;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Timer tmrBlink;
+        private System.Windows.Forms.Label lblPlays;
+        private System.Windows.Forms.Timer tmrController;
     }
 }
 
