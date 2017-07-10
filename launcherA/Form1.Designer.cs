@@ -30,32 +30,32 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SGDCLauncher));
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.pbLogo = new System.Windows.Forms.PictureBox();
             this.lblTitle = new System.Windows.Forms.Label();
             this.lblDesc = new System.Windows.Forms.Label();
             this.lblList = new System.Windows.Forms.Label();
             this.mpVideo = new AxWMPLib.AxWindowsMediaPlayer();
             this.lblPressStart = new System.Windows.Forms.Label();
             this.lblDevs = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.lblSubtitle = new System.Windows.Forms.Label();
+            this.lblMessage = new System.Windows.Forms.Label();
             this.tmrBlink = new System.Windows.Forms.Timer(this.components);
             this.lblPlays = new System.Windows.Forms.Label();
             this.tmrController = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mpVideo)).BeginInit();
             this.SuspendLayout();
             // 
-            // pictureBox1
+            // pbLogo
             // 
-            this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
-            this.pictureBox1.BackgroundImage = global::launcherA.Properties.Resources.SGDC_logo;
-            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.pictureBox1.Location = new System.Drawing.Point(12, 40);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(522, 166);
-            this.pictureBox1.TabIndex = 2;
-            this.pictureBox1.TabStop = false;
+            this.pbLogo.BackColor = System.Drawing.Color.Transparent;
+            this.pbLogo.BackgroundImage = global::launcherA.Properties.Resources.SGDC_logo;
+            this.pbLogo.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.pbLogo.Location = new System.Drawing.Point(12, 40);
+            this.pbLogo.Name = "pbLogo";
+            this.pbLogo.Size = new System.Drawing.Size(522, 166);
+            this.pbLogo.TabIndex = 2;
+            this.pbLogo.TabStop = false;
             // 
             // lblTitle
             // 
@@ -126,28 +126,28 @@
             this.lblDevs.Text = "By: Adam Gincel";
             this.lblDevs.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label1
+            // lblSubtitle
             // 
-            this.label1.BackColor = System.Drawing.Color.Transparent;
-            this.label1.Font = new System.Drawing.Font("NK57 Monospace Sc Bk", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(12, 206);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(522, 101);
-            this.label1.TabIndex = 11;
-            this.label1.Text = "Jacobus Arcade Machine\r\n\r\nGames:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblSubtitle.BackColor = System.Drawing.Color.Transparent;
+            this.lblSubtitle.Font = new System.Drawing.Font("NK57 Monospace Sc Bk", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSubtitle.Location = new System.Drawing.Point(12, 206);
+            this.lblSubtitle.Name = "lblSubtitle";
+            this.lblSubtitle.Size = new System.Drawing.Size(522, 101);
+            this.lblSubtitle.TabIndex = 11;
+            this.lblSubtitle.Text = "Jacobus Arcade Machine\r\n\r\nGames:";
+            this.lblSubtitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label2
+            // lblMessage
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.BackColor = System.Drawing.Color.Transparent;
-            this.label2.Font = new System.Drawing.Font("NK57 Monospace Sc Bk", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(1564, 40);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(300, 976);
-            this.label2.TabIndex = 12;
-            this.label2.Text = resources.GetString("label2.Text");
-            this.label2.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.lblMessage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblMessage.BackColor = System.Drawing.Color.Transparent;
+            this.lblMessage.Font = new System.Drawing.Font("NK57 Monospace Sc Bk", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblMessage.Location = new System.Drawing.Point(1564, 40);
+            this.lblMessage.Name = "lblMessage";
+            this.lblMessage.Size = new System.Drawing.Size(300, 976);
+            this.lblMessage.TabIndex = 12;
+            this.lblMessage.Text = resources.GetString("lblMessage.Text");
+            this.lblMessage.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // tmrBlink
             // 
@@ -180,33 +180,33 @@
             this.BackgroundImage = global::launcherA.Properties.Resources.hip_square;
             this.ClientSize = new System.Drawing.Size(1904, 1041);
             this.Controls.Add(this.lblPlays);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.lblMessage);
+            this.Controls.Add(this.lblSubtitle);
             this.Controls.Add(this.lblDevs);
             this.Controls.Add(this.lblPressStart);
             this.Controls.Add(this.mpVideo);
             this.Controls.Add(this.lblList);
             this.Controls.Add(this.lblDesc);
             this.Controls.Add(this.lblTitle);
-            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.pbLogo);
             this.Name = "SGDCLauncher";
             this.Text = "SGDC Launcher";
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mpVideo)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.PictureBox pbLogo;
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Label lblDesc;
         private System.Windows.Forms.Label lblList;
         private AxWMPLib.AxWindowsMediaPlayer mpVideo;
         private System.Windows.Forms.Label lblPressStart;
         private System.Windows.Forms.Label lblDevs;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblSubtitle;
+        private System.Windows.Forms.Label lblMessage;
         private System.Windows.Forms.Timer tmrBlink;
         private System.Windows.Forms.Label lblPlays;
         private System.Windows.Forms.Timer tmrController;

@@ -128,7 +128,7 @@
         AAAL
 </value>
   </data>
-  <data name="label2.Text" xml:space="preserve">
+  <data name="lblMessage.Text" xml:space="preserve">
     <value>The Jacobus Arcade Machine is presented by the Stevens Game Development Club.
 
 If this machine is malfunctioning, or you have any questions, comments, or concerns please reach out to us at sgdc@stevens.edu

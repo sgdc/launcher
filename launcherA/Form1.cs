@@ -50,25 +50,66 @@ namespace launcherA
         {
             InitializeComponent();
             launcherStartTime = DateTime.Now;
-
-            dirs = Directory.GetDirectories(Directory.GetCurrentDirectory() + "\\games\\", "*", SearchOption.TopDirectoryOnly); //get each directory in the /games folder
-            gamesList = new List<Game>();
-            foreach (string dir in dirs)
+            if (Directory.Exists(Directory.GetCurrentDirectory() + "\\games\\"))
             {
-                string info = "";
+                dirs = Directory.GetDirectories(Directory.GetCurrentDirectory() + "\\games\\", "*", SearchOption.TopDirectoryOnly); //get each directory in the /games folder
+                gamesList = new List<Game>();
+                foreach (string dir in dirs)
+                {
+                    string info = "";
 
-                try
-                {
-                    foreach (string line in File.ReadLines(dir + "\\info.json"))
+                    try
                     {
-                        info += line;
+                        foreach (string line in File.ReadLines(dir + "\\info.json"))
+                        {
+                            info += line;
+                        }
                     }
-                } catch (Exception)
-                {
-                    MessageBox.Show("Failed loading info.json in " + dir);
-                    Application.Exit();
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Failed loading info.json in " + dir);
+                        Application.Exit();
+                    }
+                    gamesList.Add(JsonConvert.DeserializeObject<Game>(info));
                 }
-                gamesList.Add(JsonConvert.DeserializeObject<Game>(info));
+            } else
+            {
+                File.WriteAllLines(Directory.GetCurrentDirectory() + "\\error.txt", new string[] { "/games/ folder does not exist." });
+                Application.Exit();
+                Environment.Exit(1);
+            }
+
+            try
+            {
+                string message = "";
+                foreach (string line in File.ReadLines(Directory.GetCurrentDirectory() + "\\message.txt"))
+                {
+                    message += line + "\n";
+                }
+                lblMessage.Text = message;
+            } catch (Exception)
+            {
+                lblMessage.Text = "Failed loading message from message.txt. Make sure message.txt exists in the launcher directory.";
+
+            }
+
+            try
+            {
+                string subtitle = "";
+                foreach (string line in File.ReadLines(Directory.GetCurrentDirectory() + "\\subtitle.txt"))
+                {
+                    subtitle += line;
+                }
+                lblSubtitle.Text = subtitle + "\n\nGames:";
+            } catch (Exception)
+            {
+                File.WriteAllLines(Directory.GetCurrentDirectory() + "\\error.txt", new string[] { "subtitle.txt does not exist." });
+                lblSubtitle.Text = "Subtitle\n\nGames:";
+            }
+
+            if (File.Exists(Directory.GetCurrentDirectory() + "\\logo.png"))
+            {
+                pbLogo.BackgroundImage = Image.FromFile(Directory.GetCurrentDirectory() + "\\logo.png"); //logo overwrite
             }
 
             //override video player settings
@@ -81,8 +122,9 @@ namespace launcherA
             if (gamesList == null || gamesList.Count <= 0)
             {
                 //no games in games folder
-                MessageBox.Show("Could not load any games. Make sure there's a /games/ folder in the launcher directory, and it has direct child folders with games that have info.json in them.");
+                File.WriteAllLines(Directory.GetCurrentDirectory() + "\\error.txt", new string[] { "/games/ folder is empty." });
                 Application.Exit();
+                Environment.Exit(1);
             }
 
 
@@ -269,7 +311,7 @@ namespace launcherA
             lblDevs.Text = "By: " + gamesList[selected].devs;
             if (gamesList[selected].videoName != null && gamesList[selected].videoName != "" && File.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName))) //if specified video exists
                 mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName);
-            else
+            else if (File.Exists(Directory.GetCurrentDirectory() + "\\videos\\static.mp4"))
             {
                 mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", "static.mp4");
             }
@@ -329,7 +371,6 @@ namespace launcherA
                     didDown = true;
                 controllers[i].LeftStickXPrev = controllers[i].LeftStick.Position.X;
                 controllers[i].LeftStickYPrev = controllers[i].LeftStick.Position.Y;
-
             }
 
             if (didUp)
@@ -339,7 +380,7 @@ namespace launcherA
             if (didStart)
                 eventStart();
         }
-
+        //VOLUME STUFF
         private const int APPCOMMAND_VOLUME_MUTE = 0x80000;
         private const int APPCOMMAND_VOLUME_UP = 0xA0000;
         private const int APPCOMMAND_VOLUME_DOWN = 0x90000;
@@ -366,8 +407,9 @@ namespace launcherA
             SendMessageW(this.Handle, WM_APPCOMMAND, this.Handle,
                 (IntPtr)APPCOMMAND_VOLUME_UP);
         }
+        //END VOLUME STUFF
 
-        private static void KillProcessAndChildrens(int pid)
+        private static void KillProcessAndChildrens(int pid) //recursively kills any and all processes started by the game we launched, guaranteeing (I hope) its death
         {
             ManagementObjectSearcher processSearcher = new ManagementObjectSearcher
               ("Select * From Win32_Process Where ParentProcessID=" + pid);
