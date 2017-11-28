@@ -48,6 +48,10 @@ namespace launcherA
 
         bool attract = false;
 
+        int gameDelay = 60;
+        int currentDelay = 0;
+
+
         public SGDCLauncher()
         {
             InitializeComponent();
@@ -167,13 +171,13 @@ namespace launcherA
             {
                 KillProcessAndChildrens(runningProcess.Id);
                 updateGamePlayedTime();
-            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEUP_HOTKEY_ID)
+            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEUP_HOTKEY_ID) //F2
             {
                 VolUp();
-            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEDOWN_HOTKEY_ID)
+            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEDOWN_HOTKEY_ID) //F3
             {
                 VolDown();
-            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEMUTE_HOTKEY_ID)
+            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEMUTE_HOTKEY_ID) //F4
             {
                 Mute();
             }
@@ -234,7 +238,7 @@ namespace launcherA
 
         void eventStart() //pressed start/space/enter
         {
-            if (runningProcess == null)
+            if (runningProcess == null && currentDelay <= 0)
             {
                 resetAttract();
                 try
@@ -272,6 +276,7 @@ namespace launcherA
         void handleGameExit(object sender, EventArgs e) //system listener for game exiting
         {
             runningProcess = null;
+            currentDelay = gameDelay;
             updateGamePlayedTime();
         }
 
@@ -407,6 +412,14 @@ namespace launcherA
                 eventDown(false);
             if (didStart)
                 eventStart();
+
+            //hijacking this to also reduce delay
+            currentDelay -= 1;
+            if (currentDelay <= 0)
+                currentDelay = 0;
+
+            //also hijacking to move mouse to 0, 0 for now
+            Cursor.Position = new Point(1920, 1080);
         }
         //VOLUME STUFF
         private const int APPCOMMAND_VOLUME_MUTE = 0x80000;
