@@ -48,15 +48,15 @@ namespace launcherA
 
         bool attract = false;
 
-        int gameDelay = 60;
+        int gameDelay = 100; //100 ticks of no restarting
         int currentDelay = 0;
 
 
-        public SGDCLauncher()
+        public SGDCLauncher() //start execution here
         {
-            InitializeComponent();
-            launcherStartTime = DateTime.Now;
-            if (Directory.Exists(Directory.GetCurrentDirectory() + "\\games\\"))
+            InitializeComponent(); //super()
+            launcherStartTime = DateTime.Now; //get start time
+            if (Directory.Exists(Directory.GetCurrentDirectory() + "\\games\\")) //if /games/ exists, load in games
             {
                 dirs = Directory.GetDirectories(Directory.GetCurrentDirectory() + "\\games\\", "*", SearchOption.TopDirectoryOnly); //get each directory in the /games folder
                 gamesList = new List<Game>();
@@ -66,23 +66,24 @@ namespace launcherA
 
                     try
                     {
-                        foreach (string line in File.ReadLines(dir + "\\info.json"))
+                        foreach (string line in File.ReadLines(dir + "\\info.json")) //read in info.json
                         {
                             info += line;
                         }
+                        gamesList.Add(JsonConvert.DeserializeObject<Game>(info)); //parse info.json to type Game, and add it to gamesList
                     }
                     catch (Exception)
                     {
                         MessageBox.Show("Failed loading info.json in " + dir);
-                        Application.Exit();
+                        //Application.Exit();
                     }
-                    gamesList.Add(JsonConvert.DeserializeObject<Game>(info));
                 }
             } else
             {
                 File.WriteAllLines(Directory.GetCurrentDirectory() + "\\error.txt", new string[] { "/games/ folder does not exist." });
-                Application.Exit();
-                Environment.Exit(1);
+                //Application.Exit();
+                //Environment.Exit(1);
+                MessageBox.Show("/games/ folder does not exist");
             }
 
             if (File.Exists(Directory.GetCurrentDirectory() + "\\config.json"))
@@ -143,8 +144,9 @@ namespace launcherA
             {
                 //no games in games folder
                 File.WriteAllLines(Directory.GetCurrentDirectory() + "\\error.txt", new string[] { "/games/ folder is empty." });
-                Application.Exit();
-                Environment.Exit(1);
+                MessageBox.Show("/games/ folder is empty");
+                //Application.Exit();
+                //Environment.Exit(1);
             }
 
 
@@ -165,7 +167,7 @@ namespace launcherA
             controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.Four));
         }
 
-        protected override void WndProc(ref Message m) //receive global hotkey event
+        protected override void WndProc(ref Message m) //receive global hotkey event, used to overwrite system reaction to F1-F4
         {
             if (m.Msg == 0x0312 && m.WParam.ToInt32() == KILLGAME_HOTKEY_ID) //F1
             {
@@ -181,7 +183,7 @@ namespace launcherA
             {
                 Mute();
             }
-            base.WndProc(ref m);
+            base.WndProc(ref m); //call normal process for those keys
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData) //respond to regular key presses when in focus (takes up, down, space/enter)
@@ -211,7 +213,7 @@ namespace launcherA
 
         void eventUp() //pressed up
         {
-            if (runningProcess == null)
+            if (runningProcess == null && gamesList != null)
             {
                 resetAttract();
                 selected -= 1;
@@ -224,7 +226,7 @@ namespace launcherA
 
         void eventDown(bool auto) //pressed down
         {
-            if (runningProcess == null)
+            if (runningProcess == null && gamesList != null)
             {
                 if (!auto)
                     resetAttract();
@@ -238,7 +240,7 @@ namespace launcherA
 
         void eventStart() //pressed start/space/enter
         {
-            if (runningProcess == null && currentDelay <= 0)
+            if (runningProcess == null && currentDelay <= 0 && gamesList != null)
             {
                 resetAttract();
                 try
@@ -327,29 +329,33 @@ namespace launcherA
 
         void populateSelectedGame() //writes the games list to reflect selected game, and updates elements on the screen accordingly
         {
-            string listText = "";
-            for (int i = 0; i < gamesList.Count; i++)
+            if (gamesList != null&& gamesList.Count > 0)
             {
-                if (i == selected)
+                string listText = "";
+                for (int i = 0; i < gamesList.Count; i++)
                 {
-                    listText += "> " + gamesList[i].name + " <\n";
-                } else
-                {
-                    listText += gamesList[i].name + "\n";
+                    if (i == selected)
+                    {
+                        listText += "> " + gamesList[i].name + " <\n";
+                    }
+                    else
+                    {
+                        listText += gamesList[i].name + "\n";
+                    }
                 }
+                lblList.Text = listText;
+                lblTitle.Text = gamesList[selected].name;
+                lblDesc.Text = gamesList[selected].description;
+                lblDevs.Text = "By: " + gamesList[selected].devs;
+                if (gamesList[selected].videoName != null && gamesList[selected].videoName != "" && File.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName))) //if specified video exists
+                    mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName);
+                else if (File.Exists(Directory.GetCurrentDirectory() + "\\videos\\static.mp4"))
+                {
+                    mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", "static.mp4");
+                }
+
+                updatePlays();
             }
-            lblList.Text = listText;
-            lblTitle.Text = gamesList[selected].name;
-            lblDesc.Text = gamesList[selected].description;
-            lblDevs.Text = "By: " + gamesList[selected].devs;
-            if (gamesList[selected].videoName != null && gamesList[selected].videoName != "" && File.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName))) //if specified video exists
-                mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName);
-            else if (File.Exists(Directory.GetCurrentDirectory() + "\\videos\\static.mp4"))
-            {
-                mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", "static.mp4");
-            }
-            
-            updatePlays();
         }
 
         void updatePlays() //sets the lblPlays text to "Plays: x       Time Played: hh:mm"
@@ -391,7 +397,7 @@ namespace launcherA
             bool didUp = false;
             bool didDown = false;
             bool didStart = false;
-            for (int i = 0; i < controllers.Count; i++)
+            for (int i = 0; controllers != null && i < controllers.Count; i++)
             {
                 controllers[i].Update();
                 controllers[i].setUDLR();
