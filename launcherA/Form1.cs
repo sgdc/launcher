@@ -55,6 +55,8 @@ namespace launcherA
         public SGDCLauncher() //start execution here
         {
             InitializeComponent(); //super()
+            //move the mouse out of the way if it was somehow in the middle of the screen
+            Cursor.Position = new Point(1920, 1080);
             launcherStartTime = DateTime.Now; //get start time
             if (Directory.Exists(Directory.GetCurrentDirectory() + "\\games\\")) //if /games/ exists, load in games
             {
@@ -374,7 +376,12 @@ namespace launcherA
 
         private void tmrBlink_Tick(object sender, EventArgs e) //blinks the "Start Game" label, or changes it to "Loading..." if a game is in progress. Also queues a screen update for weird thread cases.
         {
-            if (runningProcess != null)
+            if (attract)
+            {
+                lblPressStart.Visible = !lblPressStart.Visible;
+                lblPressStart.Text = "ATTRACT MODE";
+            }
+            else if (runningProcess != null)
             {
                 lblPressStart.Visible = true;
                 lblPressStart.Text = "Loading Game...";
@@ -424,8 +431,7 @@ namespace launcherA
             if (currentDelay <= 0)
                 currentDelay = 0;
 
-            //also hijacking to move mouse to 0, 0 for now
-            Cursor.Position = new Point(1920, 1080);
+            
         }
         //VOLUME STUFF
         private const int APPCOMMAND_VOLUME_MUTE = 0x80000;
