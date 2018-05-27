@@ -24,7 +24,7 @@ To be featured on the arcade machine, your game needs to:
 - be compatible with Xbox 360 controllers (1-4 players)
 
 ## Adding games
-The launcher here on github needs to be executed from Visual Studio (a release can be found here todo link).
+The launcher source solution here on Github needs to be executed from Visual Studio (a release can be found [here](https://github.com/sgdc/launcher/releases)).
 
 Once you have the launcher Exe, the folder should have some dlls, the exe, a /videos/ folder, and a /games/ folder. Video previews for games (any format compatible with Windows Media Player) should go in videos, and each game should have a unique folder in /games/.
 
