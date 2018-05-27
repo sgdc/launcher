@@ -63,7 +63,7 @@
             // 
             this.lblTitle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblTitle.BackColor = System.Drawing.Color.Transparent;
-            this.lblTitle.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 42F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTitle.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 42F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTitle.Location = new System.Drawing.Point(574, 9);
             this.lblTitle.Name = "lblTitle";
             this.lblTitle.Size = new System.Drawing.Size(959, 117);
@@ -75,7 +75,7 @@
             // 
             this.lblDesc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblDesc.BackColor = System.Drawing.Color.Transparent;
-            this.lblDesc.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDesc.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDesc.Location = new System.Drawing.Point(565, 754);
             this.lblDesc.Name = "lblDesc";
             this.lblDesc.Size = new System.Drawing.Size(968, 172);
@@ -86,7 +86,7 @@
             // lblList
             // 
             this.lblList.BackColor = System.Drawing.Color.Transparent;
-            this.lblList.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblList.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblList.Location = new System.Drawing.Point(12, 321);
             this.lblList.Name = "lblList";
             this.lblList.Size = new System.Drawing.Size(522, 739);
@@ -108,7 +108,7 @@
             // 
             this.lblPressStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblPressStart.BackColor = System.Drawing.Color.Transparent;
-            this.lblPressStart.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 71.99999F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPressStart.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 72F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPressStart.Location = new System.Drawing.Point(565, 879);
             this.lblPressStart.Name = "lblPressStart";
             this.lblPressStart.Size = new System.Drawing.Size(968, 137);
@@ -120,7 +120,7 @@
             // 
             this.lblDevs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblDevs.BackColor = System.Drawing.Color.Transparent;
-            this.lblDevs.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDevs.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDevs.Location = new System.Drawing.Point(560, 701);
             this.lblDevs.Name = "lblDevs";
             this.lblDevs.Size = new System.Drawing.Size(973, 35);
@@ -131,7 +131,7 @@
             // lblSubtitle
             // 
             this.lblSubtitle.BackColor = System.Drawing.Color.Transparent;
-            this.lblSubtitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSubtitle.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSubtitle.Location = new System.Drawing.Point(12, 206);
             this.lblSubtitle.Name = "lblSubtitle";
             this.lblSubtitle.Size = new System.Drawing.Size(522, 101);
@@ -143,7 +143,7 @@
             // 
             this.lblMessage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblMessage.BackColor = System.Drawing.Color.Transparent;
-            this.lblMessage.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblMessage.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMessage.Location = new System.Drawing.Point(1564, 40);
             this.lblMessage.Name = "lblMessage";
             this.lblMessage.Size = new System.Drawing.Size(300, 976);
@@ -161,7 +161,7 @@
             // 
             this.lblPlays.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblPlays.BackColor = System.Drawing.Color.Transparent;
-            this.lblPlays.Font = new System.Drawing.Font("NK57 Monospace Cd Rg", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPlays.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPlays.Location = new System.Drawing.Point(562, 733);
             this.lblPlays.Name = "lblPlays";
             this.lblPlays.Size = new System.Drawing.Size(971, 35);
@@ -191,7 +191,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::launcherA.Properties.Resources.hip_square;
+            this.BackgroundImage = global::launcherA.Properties.Resources.playstation_pattern;
             this.ClientSize = new System.Drawing.Size(1904, 1041);
             this.Controls.Add(this.lblPlays);
             this.Controls.Add(this.lblMessage);
@@ -205,6 +205,7 @@
             this.Controls.Add(this.pbLogo);
             this.Name = "SGDCLauncher";
             this.Text = "SGDC Launcher";
+            this.Load += new System.EventHandler(this.SGDCLauncher_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mpVideo)).EndInit();
             this.ResumeLayout(false);

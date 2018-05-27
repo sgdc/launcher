@@ -173,7 +173,8 @@ namespace launcherA
         {
             if (m.Msg == 0x0312 && m.WParam.ToInt32() == KILLGAME_HOTKEY_ID) //F1
             {
-                KillProcessAndChildrens(runningProcess.Id);
+                if (runningProcess != null && !runningProcess.HasExited)
+                    KillProcessAndChildrens(runningProcess.Id);
                 updateGamePlayedTime();
             } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEUP_HOTKEY_ID) //F2
             {
@@ -379,7 +380,7 @@ namespace launcherA
             if (attract)
             {
                 lblPressStart.Visible = !lblPressStart.Visible;
-                lblPressStart.Text = "ATTRACT MODE";
+                lblPressStart.Text = "Press Start"; //change if you want a custom Attract Mode text
             }
             else if (runningProcess != null)
             {
@@ -501,6 +502,11 @@ namespace launcherA
         {
             attract = true;
             Console.WriteLine("Attract = true");
+        }
+
+        private void SGDCLauncher_Load(object sender, EventArgs e)
+        {
+
         }
     }
 
