@@ -53,7 +53,7 @@
             this.pbLogo.BackColor = System.Drawing.Color.Transparent;
             this.pbLogo.BackgroundImage = global::launcherA.Properties.Resources.SGDC_logo;
             this.pbLogo.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.pbLogo.Location = new System.Drawing.Point(12, 40);
+            this.pbLogo.Location = new System.Drawing.Point(12, 31);
             this.pbLogo.Name = "pbLogo";
             this.pbLogo.Size = new System.Drawing.Size(522, 166);
             this.pbLogo.TabIndex = 2;
@@ -76,7 +76,7 @@
             this.lblDesc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblDesc.BackColor = System.Drawing.Color.Transparent;
             this.lblDesc.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDesc.Location = new System.Drawing.Point(565, 754);
+            this.lblDesc.Location = new System.Drawing.Point(565, 756);
             this.lblDesc.Name = "lblDesc";
             this.lblDesc.Size = new System.Drawing.Size(968, 172);
             this.lblDesc.TabIndex = 4;
@@ -120,7 +120,7 @@
             // 
             this.lblDevs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblDevs.BackColor = System.Drawing.Color.Transparent;
-            this.lblDevs.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDevs.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 16F, System.Drawing.FontStyle.Bold);
             this.lblDevs.Location = new System.Drawing.Point(560, 701);
             this.lblDevs.Name = "lblDevs";
             this.lblDevs.Size = new System.Drawing.Size(973, 35);
@@ -131,10 +131,10 @@
             // lblSubtitle
             // 
             this.lblSubtitle.BackColor = System.Drawing.Color.Transparent;
-            this.lblSubtitle.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSubtitle.Location = new System.Drawing.Point(12, 206);
+            this.lblSubtitle.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 22F, System.Drawing.FontStyle.Bold);
+            this.lblSubtitle.Location = new System.Drawing.Point(12, 200);
             this.lblSubtitle.Name = "lblSubtitle";
-            this.lblSubtitle.Size = new System.Drawing.Size(522, 101);
+            this.lblSubtitle.Size = new System.Drawing.Size(522, 109);
             this.lblSubtitle.TabIndex = 11;
             this.lblSubtitle.Text = "Jacobus Arcade Machine\r\n\r\nGames:";
             this.lblSubtitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -155,13 +155,13 @@
             // 
             this.tmrBlink.Enabled = true;
             this.tmrBlink.Interval = 850;
-            this.tmrBlink.Tick += new System.EventHandler(this.tmrBlink_Tick);
+            this.tmrBlink.Tick += new System.EventHandler(this.TmrBlink_Tick);
             // 
             // lblPlays
             // 
             this.lblPlays.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblPlays.BackColor = System.Drawing.Color.Transparent;
-            this.lblPlays.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPlays.Font = new System.Drawing.Font("Adobe Fan Heiti Std B", 13F, System.Drawing.FontStyle.Bold);
             this.lblPlays.Location = new System.Drawing.Point(562, 733);
             this.lblPlays.Name = "lblPlays";
             this.lblPlays.Size = new System.Drawing.Size(971, 35);
@@ -173,19 +173,19 @@
             // 
             this.tmrController.Enabled = true;
             this.tmrController.Interval = 1;
-            this.tmrController.Tick += new System.EventHandler(this.tmrController_Tick);
+            this.tmrController.Tick += new System.EventHandler(this.TmrController_Tick);
             // 
             // tmrAttract
             // 
             this.tmrAttract.Enabled = true;
             this.tmrAttract.Interval = 10000;
-            this.tmrAttract.Tick += new System.EventHandler(this.tmrAttract_Tick);
+            this.tmrAttract.Tick += new System.EventHandler(this.TmrAttract_Tick);
             // 
             // tmrAttractWait
             // 
             this.tmrAttractWait.Enabled = true;
             this.tmrAttractWait.Interval = 45000;
-            this.tmrAttractWait.Tick += new System.EventHandler(this.tmrAttractWait_Tick);
+            this.tmrAttractWait.Tick += new System.EventHandler(this.TmrAttractWait_Tick);
             // 
             // SGDCLauncher
             // 
@@ -205,7 +205,6 @@
             this.Controls.Add(this.pbLogo);
             this.Name = "SGDCLauncher";
             this.Text = "SGDC Launcher";
-            this.Load += new System.EventHandler(this.SGDCLauncher_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mpVideo)).EndInit();
             this.ResumeLayout(false);

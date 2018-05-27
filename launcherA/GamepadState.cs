@@ -21,7 +21,8 @@ namespace launcherA
         public readonly UserIndex UserIndex;
         public readonly Controller Controller;
 
-        public DPadState DPad { get; private set; }
+        public DPadState DPad { get; set; }
+        public DPadState DPadPrev { get; set; }
         public ThumbstickState LeftStick { get; private set; }
         public ThumbstickState RightStick { get; private set; }
 
@@ -100,13 +101,6 @@ namespace launcherA
                                  (gamepadState.Buttons & GamepadButtonFlags.DPadLeft) != 0,
                                  (gamepadState.Buttons & GamepadButtonFlags.DPadRight) != 0);
 
-            // Thumbsticks
-            LeftStickPrev = LeftStick;
-            RightStickPrev = RightStick;
-
-            //LeftStickXPrev = LeftStick.Position.X;
-            //LeftStickYPrev = LeftStick.Position.Y;
-
             LeftStick = new ThumbstickState(
                 Normalize(gamepadState.LeftThumbX, gamepadState.LeftThumbY, Gamepad.GamepadLeftThumbDeadZone),
                 (gamepadState.Buttons & GamepadButtonFlags.LeftThumb) != 0);
@@ -117,13 +111,13 @@ namespace launcherA
             
         }
 
-        public void setUDLR()
+        public void SetUDLR()
         {
-            Up = LeftStickYPrev < 0.75 && LeftStick.Position.Y >= 0.75;
-            Down = LeftStickYPrev > -0.75 && LeftStick.Position.Y <= -0.75;
+            Up = (LeftStickYPrev < 0.75 && LeftStick.Position.Y >= 0.75) || (DPad.Up && !DPadPrev.Up);
+            Down = (LeftStickYPrev > -0.75 && LeftStick.Position.Y <= -0.75) || (DPad.Down && !DPadPrev.Down);
 
-            Right = LeftStickXPrev < 0.75 && LeftStick.Position.X >= 0.75;
-            Left = LeftStickXPrev > -0.75 && LeftStick.Position.X <= -0.75;
+            Right = (LeftStickXPrev < 0.75 && LeftStick.Position.X >= 0.75) || (DPad.Right && !DPadPrev.Right);
+            Left = (LeftStickXPrev > -0.75 && LeftStick.Position.X <= -0.75) || (DPad.Left && !DPadPrev.Left);
         }
 
         static Vector2 Normalize(short rawX, short rawY, short threshold)
