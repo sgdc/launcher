@@ -14,7 +14,9 @@ using AxWMPLib;
 using System.Runtime.InteropServices;
 using SlimDX;
 using System.Management;
-
+using CefSharp;
+using CefSharp.WinForms;
+using CefSharp.Internals;
 
 namespace launcherA
 {
@@ -32,6 +34,12 @@ namespace launcherA
         const int VOLUMEDOWN_HOTKEY_ID = 3;
         const int VOLUMEMUTE_HOTKEY_ID = 4;
 
+        const int UP_ID = 5;
+        const int DOWN_ID = 6;
+        const int START_ID = 7;
+
+        const int REFRESH_ID = 8;
+
         string[] dirs;
 
 
@@ -39,45 +47,62 @@ namespace launcherA
 
         Process runningProcess;
         DateTime timeStarted;
-        DateTime launcherStartTime;
 
         int selected;
         List<GamepadState> controllers;
 
-        bool shouldUpdate = false;
-
         bool attract = false;
 
-        int gameDelay = 100; //100 ticks of no restarting
-        int currentDelay = 0;
+        bool hasRegisteredArrows = false; // has registered hotkeys for the arrows/space/enter
+        bool didCloseGame = false;
 
-        //Executes upon the start of the program
-        //Moves the cursor, gets the start time (used to calculate how long a game has been running)
-        //checks the /games/ folder and reads through every info.json folder within
-        //checks for a config.json in the same folder as the executable, and then parses it to update the program with that info
-        //makes the video player have no UI and play on loop
-        //runs PopulateSelectedGame() which updates the title, video, stats, and description to the first selected game
-        //sets up some listeners for Function key presses and adds four Gamepads to the controllers List
+        int gameDelay = 100; // 100 ticks of no restarting
+        int currentDelay = 0;
+        List<int> ticksHeldMacro = new List<int>();
+        int ticksUntilForceQuit = 63;
+
+        WebIO webIO;
+        Config loadedConfig;
+
+        // Executes upon the start of the program
+        // Moves the cursor, gets the start time (used to calculate how long a game has been running)
+        // checks the /games/ folder and reads through every info.json folder within
+        // checks for a _config.json in the same folder as the executable, and then parses it to update the program with that info
+        // makes the video player have no UI and play on loop
+        // runs PopulateSelectedGame() which updates the title, video, stats, and description to the first selected game
+        // sets up some listeners for Function key presses and adds four Gamepads to the controllers List
         public SGDCLauncher() 
         {
-            InitializeComponent(); //super()
-            //move the mouse out of the way if it was somehow in the middle of the screen
-            Cursor.Position = new Point(1920, 1080);
-            launcherStartTime = DateTime.Now; //get start time
-            if (Directory.Exists(Directory.GetCurrentDirectory() + "\\games\\")) //if /games/ exists, load in games
+            InitializeComponent(); // super()
+
+            // if /games/ exists, load in games
+            if (Directory.Exists(Directory.GetCurrentDirectory() + "\\games\\")) 
             {
-                dirs = Directory.GetDirectories(Directory.GetCurrentDirectory() + "\\games\\", "*", SearchOption.TopDirectoryOnly); //get each directory in the /games folder
+                dirs = Directory.GetDirectories(Directory.GetCurrentDirectory() + "\\games\\", "*", SearchOption.TopDirectoryOnly); // get each directory in the /games folder
                 gamesList = new List<Game>();
                 foreach (string dir in dirs)
                 {
                     string info = "";
                     try
                     {
-                        foreach (string line in File.ReadLines(dir + "\\info.json")) //read in info.json
+                        foreach (string line in File.ReadLines(dir + "\\info.json")) // read in info.json
                         {
                             info += line;
                         }
-                        gamesList.Add(JsonConvert.DeserializeObject<Game>(info)); //parse info.json to type Game, and add it to gamesList
+                        // parse info.json to type Game, and add it to gamesList
+                        Game game = JsonConvert.DeserializeObject<Game>(info);
+
+                        // attempt to find .webm video in folder, inject into game definition if found
+                        string[] webms = Directory.GetFiles(dir, "*.webm");
+                        if (webms.Length > 0)
+                        {
+                            string[] split = webms[0].Split('\\');
+
+                            // "gameFolderName/videoName.webm"
+                            game.foundVideo = split[split.Length - 2] + "/" + split[split.Length - 1];
+                        }
+
+                        gamesList.Add(game); 
                     }
                     catch (Exception)
                     {
@@ -90,63 +115,61 @@ namespace launcherA
                 MessageBox.Show("/games/ folder does not exist");
             }
 
-            if (File.Exists(Directory.GetCurrentDirectory() + "\\config.json"))
+            // Set default config
+            Config c = DefaultConfig();
+
+            // Check for config override
+            if (File.Exists(Directory.GetCurrentDirectory() + "\\_config.json"))
             {
-                //we have a config
+                // we have a config
                 string config = "";
-                foreach (string line in File.ReadAllLines(Directory.GetCurrentDirectory() + "\\config.json"))
+                foreach (string line in File.ReadAllLines(Directory.GetCurrentDirectory() + "\\_config.json"))
                 {
                     config += line;
                 }
                 Console.WriteLine(config);
-                Config c = JsonConvert.DeserializeObject<Config>(config);
-                if (c.message != null && c.message != "") //if a message is set
-                {
-                    lblMessage.Text = c.message;
-                }
-
-                if (c.subtitle != null && c.subtitle != "") //if a subtitle is set
-                {
-                    lblSubtitle.Text = c.subtitle + "\n\nGames:";
-                }
-
-                if (c.attractActivate > 1000) //has to be at least 1 second; how long you wait with no input until activating attract mode
-                {
-                    tmrAttractWait.Interval = c.attractActivate;
-                    tmrAttractWait.Stop();
-                    tmrAttractWait.Start();
-                }
-
-                if (c.attractScroll > 100)
-                {
-                    tmrAttract.Interval = c.attractScroll;
-                    tmrAttract.Stop();
-                    tmrAttract.Start();
-                }
-
-                if (c.startBlink > 0)
-                {
-                    tmrBlink.Interval = c.startBlink;
-                    tmrBlink.Stop();
-                    tmrBlink.Start();
-                }
-            }
-
-            if (File.Exists(Directory.GetCurrentDirectory() + "\\logo.png"))
+                c = JsonConvert.DeserializeObject<Config>(config);
+            } else
             {
-                pbLogo.BackgroundImage = Image.FromFile(Directory.GetCurrentDirectory() + "\\logo.png"); //logo overwrite
+                // if there's no config, write the default to disc
+                File.WriteAllText(Directory.GetCurrentDirectory() + "\\_config.json", JsonConvert.SerializeObject(c));
+            }
+            loadedConfig = c;
+
+            if (c.attractActivate > 1000) // has to be at least 1 second; how long you wait with no input until activating attract mode
+            {
+                tmrAttractWait.Interval = c.attractActivate;
+                tmrAttractWait.Stop();
+                tmrAttractWait.Start();
             }
 
-            //override video player settings
-            mpVideo.settings.setMode("loop", true);
-            mpVideo.uiMode = "none";
+            if (c.attractScroll > 100)
+            {
+                tmrAttract.Interval = c.attractScroll;
+                tmrAttract.Stop();
+                tmrAttract.Start();
+            }
+
+            if (c.borderless)
+            {
+                FormBorderStyle = FormBorderStyle.None;
+            }
+
+            // webBrowser
+            webBrowser.LoadUrlAsync(string.Format("file:// /{0}/_index.html", Directory.GetCurrentDirectory()));
+            webIO = new WebIO();
+            webIO.logo = "./logo.png";
+            webIO.staticVideoPath = "./videos/static.mp4";
+            webIO.games = gamesList;
+            webIO.pageConfig = c;
+            SendWebIO();
 
             runningProcess = null;
-            timeStarted = default(DateTime); //can't use null so...okay
+            timeStarted = default(DateTime); // can't use null so...okay
 
             if (gamesList == null || gamesList.Count <= 0)
             {
-                //no games in games folder
+                // no games in games folder
                 File.WriteAllLines(Directory.GetCurrentDirectory() + "\\error.txt", new string[] { "/games/ folder is empty." });
                 MessageBox.Show("/games/ folder is empty");
             }
@@ -154,70 +177,81 @@ namespace launcherA
 
             PopulateSelectedGame();
 
+            //  Register all inputs (will run regardless of focus)
             RegisterHotKey(this.Handle, KILLGAME_HOTKEY_ID, 0, (int)Keys.F1);
             RegisterHotKey(this.Handle, VOLUMEUP_HOTKEY_ID, 0, (int)Keys.F2);
             RegisterHotKey(this.Handle, VOLUMEDOWN_HOTKEY_ID, 0, (int)Keys.F3);
             RegisterHotKey(this.Handle, VOLUMEMUTE_HOTKEY_ID, 0, (int)Keys.F4);
+            RegisterHotKey(this.Handle, REFRESH_ID, 0, (int)Keys.F5);
 
+            RegisterArrows(true);
 
-            FormBorderStyle = FormBorderStyle.None;
             WindowState = FormWindowState.Maximized;
             controllers = new List<GamepadState>();
             controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.One));
+            ticksHeldMacro.Add(0);
+
             controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.Two));
+            ticksHeldMacro.Add(0);
+
             controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.Three));
+            ticksHeldMacro.Add(0);
+
             controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.Four));
+            ticksHeldMacro.Add(0);
         }
 
-        //receive global hotkey event, used to overwrite system reaction to F1-F4
+        // receive global hotkey event, used to overwrite system reaction to F1-F4
         protected override void WndProc(ref Message m) 
         {
-            if (m.Msg == 0x0312 && m.WParam.ToInt32() == KILLGAME_HOTKEY_ID) //F1
+            int kId = m.WParam.ToInt32();
+            if (m.Msg == 0x0312) //  Key Press
             {
-                if (runningProcess != null && !runningProcess.HasExited)
-                    KillProcessAndChildrens(runningProcess.Id);
-                UpdateGamePlayedTime();
-            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEUP_HOTKEY_ID) //F2
-            {
-                VolUp();
-            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEDOWN_HOTKEY_ID) //F3
-            {
-                VolDown();
-            } else if (m.Msg == 0x0312 && m.WParam.ToInt32() == VOLUMEMUTE_HOTKEY_ID) //F4
-            {
-                Mute();
+                if (kId == KILLGAME_HOTKEY_ID) // F1
+                {
+                    if (runningProcess != null && !runningProcess.HasExited)
+                        KillProcessAndChildrens(runningProcess.Id);
+                    UpdateGamePlayedTime();
+                }
+                else if (kId == VOLUMEUP_HOTKEY_ID) // F2
+                {
+                    VolUp();
+                }
+                else if (kId == VOLUMEDOWN_HOTKEY_ID) // F3
+                {
+                    VolDown();
+                }
+                else if (kId == VOLUMEMUTE_HOTKEY_ID) // F4
+                {
+                    Mute();
+                } else if (kId == REFRESH_ID) // F5
+                {
+                    //webBrowser.Reload();
+                }
+
+                if (runningProcess == null && SGDCLauncher.ActiveForm != null)
+                {
+                    //  only bother checking for these cases if there's no current process and the the window is in focus
+                    //  this ensures they get responded to regardless of what inside the program has the focus
+                    //  was having problems with CefSharp stealing inputs without this
+                    if (kId == UP_ID)
+                    {
+                        EventUp();
+                    } else if (kId == DOWN_ID)
+                    {
+                        EventDown(false);
+                    } else if (kId == START_ID)
+                    {
+                        EventStart();
+                    }
+
+                }
             }
-            base.WndProc(ref m); //call normal process for those keys
+            base.WndProc(ref m); // call normal process for those keys
         }
 
-        //respond to regular key presses when in focus (takes up, down, space/enter)
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) 
-        {
-            if (runningProcess == null)
-            {
-                if (keyData == Keys.Up)
-                {
-                    EventUp();
-                    return true;
-                }
-                else if (keyData == Keys.Down)
-                {
-                    EventDown(false);
-                    return true;
-                }
-                else if (keyData == Keys.Enter || keyData == Keys.Space)
-                {
-                    EventStart();
-                    return true;
-                }
-            }
-
-            // Call the base class
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        //User Pressed Up
-        //Go to the previous entry in the gamesList, set it to selected, and run PopulateSelectedGame
+        // User Pressed Up
+        // Go to the previous entry in the gamesList, set it to selected, and run PopulateSelectedGame
         void EventUp() 
         {
             if (runningProcess == null && gamesList != null)
@@ -226,14 +260,15 @@ namespace launcherA
                 selected -= 1;
                 if (selected < 0)
                     selected = gamesList.Count - 1;
-                //Console.WriteLine(gamesList.Count.ToString());
+                // Console.WriteLine(gamesList.Count.ToString());
+                // BrowserExecute("Press('Up');");
                 PopulateSelectedGame();
             }
         }
 
-        //User Pressed Down
-        //Go to the next entry in the gamesList, set it to selected, and run PopulateSelectedGame
-        //auto means automatic, and if it's true (because the Attract Mode is what hit down), it wil not reset the Attract Mode timer.
+        // User Pressed Down
+        // Go to the next entry in the gamesList, set it to selected, and run PopulateSelectedGame
+        // auto means automatic, and if it's true (because the Attract Mode is what hit down), it wil not reset the Attract Mode timer.
         void EventDown(bool auto)
         {
             if (runningProcess == null && gamesList != null)
@@ -243,19 +278,20 @@ namespace launcherA
                 selected += 1;
                 if (selected > gamesList.Count - 1)
                     selected = 0;
-                //Console.WriteLine(gamesList.Count.ToString());
+
                 PopulateSelectedGame();
             }
         }
 
-        //User wants to load a game.
-        //Make sure no game is loading, check that a valid executable file exists (either defined as exeName in info.json or just the first exe in the folder) and run it
-        //StartGame() handles tracking the loaded process.
-        void EventStart() //pressed start/space/enter
+        // User wants to load a game.
+        // Make sure no game is loading, check that a valid executable file exists (either defined as exeName in info.json or just the first exe in the folder) and run it
+        // StartGame() handles tracking the loaded process.
+        void EventStart() // pressed start/space/enter
         {
             if (runningProcess == null && currentDelay <= 0 && gamesList != null)
             {
                 ResetAttract();
+                BrowserExecute("Press('Start');");
                 try
                 {
                     if (gamesList[selected].exeName != null && gamesList[selected].exeName != "" && gamesList[selected].exeName.Contains("."))
@@ -264,7 +300,7 @@ namespace launcherA
                     }
                     else
                     {
-                        StartGame(Directory.GetFiles(dirs[selected], "*.exe")[0]); //take first exe you find
+                        StartGame(Directory.GetFiles(dirs[selected], "*.exe")[0]); // take first exe you find
                     }
                 }
                 catch (Exception)
@@ -275,29 +311,36 @@ namespace launcherA
             }
         }
 
-        //Given `path`, launch that game and update stats
+        // Given `path`, launch that game and update stats
         void StartGame(string path) 
         {
             runningProcess = Process.Start(path);
             gamesList[selected].plays += 1;
             WriteGamesJson();
-            UpdatePlays();
 
             timeStarted = DateTime.Now;
 
             runningProcess.EnableRaisingEvents = true;
-            runningProcess.Exited += new EventHandler(HandleGameExit); //set HandleGameExit() as the handler for the game being closed.
+            runningProcess.Exited += new EventHandler(HandleGameExit); // set HandleGameExit() as the handler for the game being closed.
+
+            webIO.loadedGame = true;
+            SendWebIO();
         }
 
-        //system listener for game exiting
+        // system listener for game exiting
         void HandleGameExit(object sender, EventArgs e)
         {
             runningProcess = null;
             currentDelay = gameDelay;
             UpdateGamePlayedTime();
+
+            didCloseGame = true;
+
+            webIO.loadedGame = false;
+            SendWebIO();
         }
 
-        //Resets tmrAttractWait -- if tmrAttractWait activates, it sets attract mode to true.
+        // Resets tmrAttractWait -- if tmrAttractWait activates, it sets attract mode to true.
         void ResetAttract()
         {
             attract = false;
@@ -306,16 +349,15 @@ namespace launcherA
             Console.WriteLine("Reset attract.");
         }
 
-        //on game close, update the time, save it to file, and queue a screen update
+        // on game close, update the time, save it to file, and queue a screen update
         void UpdateGamePlayedTime() 
         {
             TimeSpan total = DateTime.Now.Subtract(timeStarted);
             gamesList[selected].time += total.Minutes + 1;
             WriteGamesJson();
-            shouldUpdate = true; //have to queue because handleGameExit can call this which is on a different thread
         }
 
-        //manually serialize gamesList back to a json file, done strictly for prettier formatting in the json file
+        // manually serialize gamesList back to a json file, done strictly for prettier formatting in the json file
         void WriteGamesJson() 
         {
             for (int i = 0; i < gamesList.Count; i++)
@@ -326,9 +368,9 @@ namespace launcherA
                 s += "\t\"name\": \"" + g.name + "\",\n";
                 s += "\t\"description\": \"" + g.description + "\",\n";
                 s += "\t\"devs\": \"" + g.devs + "\",\n";
-                if (g.exeName != null && g.exeName.Length > 1) //only put it there if it existed
+                if (g.exeName != null && g.exeName.Length > 1) // only put it there if it existed
                     s += "\t\"exeName\": \"" + g.exeName + "\",\n";
-                if (g.videoName != null && g.videoName.Length > 1) //only put it there if it existed
+                if (g.videoName != null && g.videoName.Length > 1) // only put it there if it existed
                     s += "\t\"videoName\": \"" + g.videoName + "\",\n";
                 if (g.time > 0)
                     s += "\t\"time\": " + g.time + ",\n";
@@ -345,55 +387,19 @@ namespace launcherA
             }
         }
 
-        //writes the games list to reflect selected game, and updates elements on the screen accordingly
+        // writes the games list to reflect selected game, and updates elements on the screen accordingly
         void PopulateSelectedGame() 
         {
             if (gamesList != null && gamesList.Count > 0)
             {
-                string listText = "";
-                for (int i = 0; i < gamesList.Count; i++)
-                {
-                    if (i == selected)
-                    {
-                        listText += "> " + gamesList[i].name + " <\n";
-                    }
-                    else
-                    {
-                        listText += gamesList[i].name + "\n";
-                    }
-                }
-                lblList.Text = listText;
-                lblTitle.Text = gamesList[selected].name;
-                lblDesc.Text = gamesList[selected].description;
-                lblDevs.Text = "By: " + gamesList[selected].devs;
-                if (gamesList[selected].videoName != null && gamesList[selected].videoName != "" && File.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName))) //if specified video exists
-                    mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", gamesList[selected].videoName);
-                else if (File.Exists(Directory.GetCurrentDirectory() + "\\videos\\static.mp4"))
-                {
-                    mpVideo.URL = System.IO.Path.Combine(Directory.GetCurrentDirectory() + "\\videos\\", "static.mp4");
-                }
-
-                UpdatePlays();
+                webIO.selectedGameIndex = selected;
+                webIO.currentlySelectedGame = gamesList[selected];
+                SendWebIO();
             }
         }
 
-        //sets the lblPlays text to "Plays: x       Time Played: d?:hh:mm"
-        void UpdatePlays() 
-        {
-            string display = "Plays: " + gamesList[selected].plays.ToString() + "   Time Played: ";
-            int hours = (int)Math.Floor(gamesList[selected].time / 60.0);
-            int days = (int)hours / 24;
-            hours -= (days * 24);
-            int minutes = gamesList[selected].time % 60;
-            string time = "";
-            if (days > 0)
-                time += days.ToString() + "d:";
-            time += (hours < 10 ? "0" + hours.ToString() : hours.ToString()) + "h:" + (minutes < 10 ? "0" + minutes.ToString() : minutes.ToString()) + "m";
-            lblPlays.Text = display + time;
-        }
-
-        // ------------------- VOLUME STUFF
-        //looked all of this up online -- this is how you interface with Win32 to perform system events like "Volume Up"
+        //  ------------------- VOLUME STUFF
+        // looked all of this up online -- this is how you interface with Win32 to perform system events like "Volume Up"
         private const int APPCOMMAND_VOLUME_MUTE = 0x80000;
         private const int APPCOMMAND_VOLUME_UP = 0xA0000;
         private const int APPCOMMAND_VOLUME_DOWN = 0x90000;
@@ -420,9 +426,9 @@ namespace launcherA
             SendMessageW(this.Handle, WM_APPCOMMAND, this.Handle,
                 (IntPtr)APPCOMMAND_VOLUME_UP);
         }
-        // --------------- END VOLUME STUFF
+        //  --------------- END VOLUME STUFF
 
-        //recursively kills any and all processes started by the game we launched, hopefully guaranteeing its death
+        // recursively kills any and all processes started by the game we launched, hopefully guaranteeing its death
         private static void KillProcessAndChildrens(int pid) 
         {
             ManagementObjectSearcher processSearcher = new ManagementObjectSearcher
@@ -436,21 +442,23 @@ namespace launcherA
             }
             catch (ArgumentException)
             {
-                // Process already exited.
+                //  Process already exited.
             }
 
             if (processCollection != null)
             {
                 foreach (ManagementObject mo in processCollection)
                 {
-                    KillProcessAndChildrens(Convert.ToInt32(mo["ProcessID"])); //kill child processes(also kills childrens of childrens etc.)
+                    KillProcessAndChildrens(Convert.ToInt32(mo["ProcessID"])); // kill child processes(also kills childrens of childrens etc.)
                 }
             }
         }
 
-        //every tick poll the controllers for input, and perform actions as necessary
+        // every tick poll the controllers for input, and perform actions as necessary
+        // set to 16ms / tick
         private void TmrController_Tick(object sender, EventArgs e) 
         {
+            BrowserSize();
             bool didUp = false;
             bool didDown = false;
             bool didStart = false;
@@ -458,8 +466,8 @@ namespace launcherA
             {
                 controllers[i].Update();
 
-                //tracks previous and current stick location
-                //if previous stick was less than left, and current stick is left, that's the frame they pressed left
+                // tracks previous and current stick location
+                // if previous stick was less than left, and current stick is left, that's the frame they pressed left
                 controllers[i].SetUDLR();
 
                 if (controllers[i].A || controllers[i].Start)
@@ -471,6 +479,25 @@ namespace launcherA
                 controllers[i].LeftStickXPrev = controllers[i].LeftStick.Position.X;
                 controllers[i].LeftStickYPrev = controllers[i].LeftStick.Position.Y;
                 controllers[i].DPadPrev = controllers[i].DPad;
+
+                if (loadedConfig.closeWithBackAndStart && runningProcess != null && !runningProcess.HasExited)
+                {
+                    if (controllers[i].Back && controllers[i].Start)
+                    {
+                        // holding Back + Start Macro
+                        ticksHeldMacro[i] += 1;
+                        if (ticksHeldMacro[i] > ticksUntilForceQuit)
+                        {
+                            Console.Write("Do Close from Macro.");
+                            ticksHeldMacro[i] = 0;
+                            KillProcessAndChildrens(runningProcess.Id);
+                            UpdateGamePlayedTime();
+                        }
+                    } else if (ticksHeldMacro[i] > 0)
+                    {
+                        ticksHeldMacro[i] -= 1;
+                    }
+                }
             }
 
             if (didUp)
@@ -480,64 +507,113 @@ namespace launcherA
             if (didStart)
                 EventStart();
 
-            //hijacking this to also reduce delay -- as long as currentDelay is > 0, a new game can't be started.
-            //This was done to prevent accidental game starts the instant a game was closed. It's set to 100 ticks by default.
+            // hijacking this to also reduce delay -- as long as currentDelay is > 0, a new game can't be started.
+            // This was done to prevent accidental game starts the instant a game was closed. It's set to 100 ticks by default.
             if (currentDelay > 0)
                 currentDelay--;
-        }
 
-        //blinks the "Start Game" label, or changes it to "Loading..." if a game is in progress.
-        //Also queues a screen update for weird thread cases.
-        private void TmrBlink_Tick(object sender, EventArgs e) 
-        {
-            if (attract)
-            {
-                lblPressStart.Visible = !lblPressStart.Visible;
-                lblPressStart.Text = "Press Start"; //change if you want a custom Attract Mode text
-            }
-            else if (runningProcess != null)
-            {
-                lblPressStart.Visible = true;
-                lblPressStart.Text = "Loading Game...";
-            }
-            else
-            {
-                lblPressStart.Text = "Press Start";
-                lblPressStart.Visible = !lblPressStart.Visible;
-            }
+            if (webIO != null && webIO.pageConfig != null && webIO.pageConfig.lockMouse)
+                Cursor.Position = new Point(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
 
-            if (shouldUpdate)
+            // Un-register and re-register arrow keys/enter/space when window does/does not have focus
+            // sends true when focused, false otherwise
+            RegisterArrows(SGDCLauncher.ActiveForm != null);
+
+            if (didCloseGame)
             {
-                PopulateSelectedGame();
-                shouldUpdate = false;
+                didCloseGame = false;
+                this.TopMost = true;
+                this.TopMost = false;
+                this.Activate();
             }
         }
 
-        //if attract mode is enabled, this will scroll through the games list
+        // if attract mode is enabled, this will scroll through the games list
         private void TmrAttract_Tick(object sender, EventArgs e)
         {
             Console.WriteLine("Got attract tick");
             if (attract && (runningProcess == null || runningProcess.HasExited))
             {
-                EventDown(true); //manually "scroll down" once every tick
+                EventDown(true); // manually "scroll down" once every tick
             }
         }
 
-        //if attract mode isn't enabled, this timer ticks towards executing this event (gets reset to zero upon user action)
-        //if this event is executed, attract mode gets enabled
+        // if attract mode isn't enabled, this timer ticks towards executing this event (gets reset to zero upon user action)
+        // if this event is executed, attract mode gets enabled
         private void TmrAttractWait_Tick(object sender, EventArgs e)
         {
             attract = true;
             Console.WriteLine("Setting Attract to True.");
         }
+
+        public void BrowserExecute(string scr)
+        {
+            if (!webBrowser.CanExecuteJavascriptInMainFrame)
+                webBrowser.ExecuteScriptAsyncWhenPageLoaded(scr);
+            else
+                webBrowser.ExecuteScriptAsync(scr);
+        }
+
+        public void SendDataToBrowser(string data)
+        {
+            BrowserExecute("ReceiveData(" + data + ");");
+        }
+
+        public void SendWebIO()
+        {
+            SendDataToBrowser(JsonConvert.SerializeObject(webIO));
+        }
+
+        public void BrowserSize()
+        {
+            if (SGDCLauncher.ActiveForm != null)
+            {
+                webBrowser.Width = SGDCLauncher.ActiveForm.Width - 15;
+                webBrowser.Height = SGDCLauncher.ActiveForm.Height - 15;
+            }
+        }
+
+        public Config DefaultConfig()
+        {
+            Config c = new Config();
+            c.message = "The Jacobus Arcade Machine is presented by the Stevens Game Development Club.\n\nIf this machine is malfunctioning, or you have any questions, comments, or concerns please reach out to us at sgdc@stevens.edu\n\nLearn more about what we do at http:// sgdc.dev";
+            c.subtitle = "Jacobus Arcade Machine";
+            c.attractActivate = 45000;
+            c.attractScroll = 10000;
+            c.startBlink = 450;
+            c.borderless = false;
+            c.lockMouse = false;
+            c.closeWithBackAndStart = true;
+
+            return c;
+        }
+
+        public void RegisterArrows(bool reg)
+        {
+            if (reg && !hasRegisteredArrows)
+            {
+                RegisterHotKey(this.Handle, UP_ID, 0, (int)Keys.Up);
+                RegisterHotKey(this.Handle, DOWN_ID, 0, (int)Keys.Down);
+                RegisterHotKey(this.Handle, START_ID, 0, (int)Keys.Enter);
+                RegisterHotKey(this.Handle, START_ID, 0, (int)Keys.Space);
+                hasRegisteredArrows = true;
+            } else if (!reg && hasRegisteredArrows)
+            {
+                UnregisterHotKey(this.Handle, UP_ID);
+                UnregisterHotKey(this.Handle, DOWN_ID);
+                UnregisterHotKey(this.Handle, START_ID);
+                hasRegisteredArrows = false;
+            }
+        }
     }
 
-    //json class definitions
+    // json class definitions
     public class Game
     {
         public string name { get; set; }
         public string description { get; set; }
         public string exeName { get; set; }
+        public string foundVideo { get; set; }
         public string videoName { get; set; }
         public string devs { get; set; }
         public int plays { get; set; }
@@ -551,5 +627,23 @@ namespace launcherA
         public int attractActivate { get; set; }
         public int attractScroll { get; set; }
         public int startBlink { get; set; }
+        public bool borderless { get; set; }
+        public bool lockMouse { get; set; }
+
+        // Support a macro for holding Back+Start for 1 second with a game open to force close the game
+        // Defaults to true
+        public bool closeWithBackAndStart { get; set; }
+    }
+
+    public class WebIO
+    {
+        public Game currentlySelectedGame { get; set; }
+        public string selectedGameVideo { get; set; }
+        public List<Game> games { get; set; }
+        public Config pageConfig { get; set; }
+        public string logo { get; set; }
+        public int selectedGameIndex { get; set; }
+        public string staticVideoPath { get; set; }
+        public bool loadedGame { get; set; }
     }
 }

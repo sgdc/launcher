@@ -16,6 +16,12 @@ namespace launcherA
         {
             UserIndex = userIndex;
             Controller = new Controller(userIndex);
+
+            HoldDirectionThreshold = 0.25f; // time holding direction before rapidly pressing that direction
+            HoldDirectionInterval = 0.09f; // how quickly to move in the held direction (0.25f = 4 times per second)
+
+            fakeUp = false;
+            fakeDown = false;
         }
 
         public readonly UserIndex UserIndex;
@@ -25,13 +31,10 @@ namespace launcherA
         public DPadState DPadPrev { get; set; }
         public ThumbstickState LeftStick { get; private set; }
         public ThumbstickState RightStick { get; private set; }
-
         public ThumbstickState LeftStickPrev { get; private set; }
         public ThumbstickState RightStickPrev { get; private set; }
-
         public float LeftStickXPrev { get; set; }
         public float LeftStickYPrev { get; set; }
-
 
         public bool A { get; private set; }
         public bool B { get; private set; }
@@ -52,6 +55,15 @@ namespace launcherA
         public float RightTrigger { get; private set; }
         public float LeftTrigger { get; private set; }
 
+        public float HoldDirectionThreshold { get; private set; }
+        public float HoldDirectionInterval { get; private set; }
+
+        private float holdUpTime { get; set; }
+        private float holdDownTime { get; set; }
+
+        private bool fakeUp { get; set; }
+        private bool fakeDown { get; set; }
+
         public bool Connected
         {
             get { return Controller.IsConnected; }
@@ -70,6 +82,8 @@ namespace launcherA
         {
             // If not connected, nothing to update
             if (!Connected) return;
+
+            CheckHolding(); // assign fakeUp and fakeDown if holding up/down for long enough
 
             // If same packet, nothing to update
             State state = Controller.GetState();
@@ -107,17 +121,19 @@ namespace launcherA
             RightStick = new ThumbstickState(
                 Normalize(gamepadState.RightThumbX, gamepadState.RightThumbY, Gamepad.GamepadRightThumbDeadZone),
                 (gamepadState.Buttons & GamepadButtonFlags.RightThumb) != 0);
-
-            
         }
 
         public void SetUDLR()
         {
-            Up = (LeftStickYPrev < 0.75 && LeftStick.Position.Y >= 0.75) || (DPad.Up && !DPadPrev.Up);
-            Down = (LeftStickYPrev > -0.75 && LeftStick.Position.Y <= -0.75) || (DPad.Down && !DPadPrev.Down);
+            Up = (LeftStickYPrev < 0.75 && LeftStick.Position.Y >= 0.75) || (DPad.Up && !DPadPrev.Up) || fakeUp;
+            Down = (LeftStickYPrev > -0.75 && LeftStick.Position.Y <= -0.75) || (DPad.Down && !DPadPrev.Down) || fakeDown;
 
             Right = (LeftStickXPrev < 0.75 && LeftStick.Position.X >= 0.75) || (DPad.Right && !DPadPrev.Right);
             Left = (LeftStickXPrev > -0.75 && LeftStick.Position.X <= -0.75) || (DPad.Left && !DPadPrev.Left);
+
+            DPadPrev = DPad;
+            fakeUp = false;
+            fakeDown = false;
         }
 
         static Vector2 Normalize(short rawX, short rawY, short threshold)
@@ -152,6 +168,38 @@ namespace launcherA
             {
                 Clicked = clicked;
                 Position = position;
+            }
+        }
+
+        private void CheckHolding()
+        {
+            if ((LeftStickYPrev >= 0.75) || (DPadPrev.Up)) // holding up
+            {
+                holdUpTime += 0.016f; // timer is set to 16ms
+                if (holdUpTime > HoldDirectionInterval + HoldDirectionThreshold)
+                {
+                    holdUpTime = HoldDirectionThreshold;
+                    fakeUp = true;
+                }
+            }
+            else
+            {
+                // not holding up
+                holdUpTime = 0f;
+            }
+
+            if ((LeftStickYPrev <= -0.75) || DPadPrev.Down) // holding down
+            {
+                holdDownTime += 0.016f; // timer is set to 16ms
+                if (holdDownTime > HoldDirectionInterval + HoldDirectionThreshold)
+                {
+                    holdDownTime = HoldDirectionThreshold;
+                    fakeDown = true;
+                }
+            }
+            else
+            {
+                holdDownTime = 0f;
             }
         }
     }
