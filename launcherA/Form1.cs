@@ -568,8 +568,15 @@ namespace launcherA
         {
             if (SGDCLauncher.ActiveForm != null)
             {
-                webBrowser.Width = SGDCLauncher.ActiveForm.Width - 15;
-                webBrowser.Height = SGDCLauncher.ActiveForm.Height - 15;
+                if (loadedConfig.borderless)
+                {
+                    webBrowser.Width = SGDCLauncher.ActiveForm.Width;
+                    webBrowser.Height = SGDCLauncher.ActiveForm.Height;
+                } else
+                {
+                    webBrowser.Width = SGDCLauncher.ActiveForm.Width - 15;
+                    webBrowser.Height = SGDCLauncher.ActiveForm.Height - 15;
+                }
             }
         }
 
