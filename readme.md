@@ -1,5 +1,5 @@
-# SGDC Launcher 2.5
-The SGDC Launcher 2.5 is a launcher designed to be the front-end experience for users of the Jacobus Arcade Machine. It has been rewritten from the ground up for Windows with Xbox 360 Controller Support, global controls (kill game, volume up/down/mute), play stats for games, and easily configured on-screen messages.
+# SGDC Launcher 2.6
+The SGDC Launcher 2.6 is a launcher designed to be the front-end experience for users of the Jacobus Arcade Machine. It has been rewritten from the ground up for Windows with Xbox 360 Controller Support, global controls (kill game, volume up/down/mute), play stats for games, and easily configured on-screen messages.
 
 
 ## SGDC Launcher Features
@@ -28,7 +28,7 @@ To be featured on the arcade machine, your game needs to:
 ## Adding games
 The launcher here on Github needs to be executed from Visual Studio (a release can be found under Releases).
 
-Once you have the launcher Exe, the folder should have some dlls, the exe, a /videos/ folder, and a /games/ folder. Video previews for games (in .webm format, you can look up an online converter) should go in videos, and each game should have a unique folder in /games/.
+Once you have the launcher Exe, the folder should have some dlls, the exe, and a /games/ folder. Each game should have a unique folder in /games/, and in each folder you should have an info.json and a .webm video preview. You can look up online video converters to convert from mp4 files to webm, or look below for ffmpeg commands to do the same.
 
 ### I have a game to add, what do I do?
 First things first: does your game start in fullscreen and have controller support? Great! It can go on the machine. You'll need to make a small file called info.json in the directory of your game.
@@ -41,8 +41,7 @@ It should look like this:
         "description": "Game description.",
         "devs": "Person A and Person B",
         //below this is optional
-        "videoName": "videoInVideosFolder.webm", // if this is not specified, the launcher looks for the first .webm it can find in the game's folder.
-        "exeName": "theSpecificFileToLoad.jar" //if this is not specified, the launcher looks for the first .exe it can find in the game's folder. Necessary if the game is not a .exe file.
+        "exeName": "theSpecificFileToLoad.jar" //if this is not specified, the launcher looks for the first .exe it can find in the game's folder. This field is necessary if the game is not a .exe file.
     }
 ```
 
@@ -99,8 +98,7 @@ This launcher is now running an embedded Chromium window inside a Winforms appli
 
 ## Other Notes
 - The Launcher keeps track of "number of times game launched" and "time game has spent open" on a per game basis, and writes those values to each game's `info.json`
-- The primary reason this Launcher was written as a Winforms application was so that we could make use of Windows hooks allowing us to capture the F1, F2, F3, and F4 keys regardless of what program was focused, along with being able to launch child processes we could later force to quit.
+- The primary reason this Launcher was written as a Winforms application was so that we could make use of Windows hooks allowing us to capture the F1, F2, F3, and F4 keys regardless of what program was focused, along with being able to launch child processes we could later force to quit. We have also added support for controllers holding Start+Back to force quit games.
 - The reason we embedded a Chromium window into the program was because Winforms is hard to make look nice, and extremely hard to make responsive to different sizes. A 100% scaled web window solved these issues, after we found a pipeline to beam information down to the HTML file.
-- A number of the essentially required files (the _index.html, logo.png, style.css, the static.webm and loadinggame.webm videos, the default info.json, and probably more) are not properly bundled in the project as assets. If starting from scratch, Start the project in Debug mode once to generate a /bin/Debug folder, then copy the contents of the /bin/ folder in the latest Release into that /Debug/ folder, to ensure you've got everything.
-- For reasons beyond my (Adam's) understanding the Launcher does not seem to work when running in a Release config.
+- A number of the essentially required files (the _index.html, logo.png, style.css, the static.webm and loadinggame.webm videos, the default info.json, and probably more) are not properly bundled in the project as assets. If starting from scratch, Start the project in Debug mode once to generate a `/bin/Debug` folder, then copy the contents of the `/Copy Into Debug or Release/` folder in the project root into that `/bin/Debug/` folder. Once you run the project a second time, it should fully start up correctly.
 - Honestly if you want to make modifications to this project you'll probably want to reach out to me. I'm in the SGDC Discord and you can also find me through the commit history of this repo.
