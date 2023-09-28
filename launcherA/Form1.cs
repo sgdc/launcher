@@ -12,7 +12,6 @@ using System.IO;
 using Newtonsoft.Json;
 using AxWMPLib;
 using System.Runtime.InteropServices;
-using SlimDX;
 using System.Management;
 using CefSharp;
 using CefSharp.WinForms;
@@ -20,10 +19,8 @@ using CefSharp.Internals;
 
 namespace launcherA
 {
-    
     public partial class SGDCLauncher : Form
     {
-
         [DllImport("user32.dll")]
         public static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vlc);
         [DllImport("user32.dll")]
@@ -188,16 +185,16 @@ namespace launcherA
 
             WindowState = FormWindowState.Maximized;
             controllers = new List<GamepadState>();
-            controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.One));
+            controllers.Add(new GamepadState(Controller_Wrapper.PlayerIndex.One));
             ticksHeldMacro.Add(0);
 
-            controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.Two));
+            controllers.Add(new GamepadState(Controller_Wrapper.PlayerIndex.Two));
             ticksHeldMacro.Add(0);
 
-            controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.Three));
+            controllers.Add(new GamepadState(Controller_Wrapper.PlayerIndex.Three));
             ticksHeldMacro.Add(0);
 
-            controllers.Add(new GamepadState(SlimDX.XInput.UserIndex.Four));
+            controllers.Add(new GamepadState(Controller_Wrapper.PlayerIndex.Four));
             ticksHeldMacro.Add(0);
         }
 
@@ -476,8 +473,8 @@ namespace launcherA
                     didUp = true;
                 if (controllers[i].Down)
                     didDown = true;
-                controllers[i].LeftStickXPrev = controllers[i].LeftStick.Position.X;
-                controllers[i].LeftStickYPrev = controllers[i].LeftStick.Position.Y;
+                controllers[i].LeftStickXPrev = controllers[i].LeftStick.X;
+                controllers[i].LeftStickYPrev = controllers[i].LeftStick.Y;
                 controllers[i].DPadPrev = controllers[i].DPad;
 
                 if (loadedConfig.closeWithBackAndStart && runningProcess != null && !runningProcess.HasExited)

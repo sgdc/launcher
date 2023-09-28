@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SlimDX;
-using SlimDX.XInput;
 
 namespace launcherA
 {
@@ -12,11 +10,10 @@ namespace launcherA
     {
         uint lastPacket;
         
-        public GamepadState(UserIndex userIndex)
+        public GamepadState(Controller_Wrapper.PlayerIndex userIndex)
         {
             UserIndex = userIndex;
-            Controller = new Controller(userIndex);
-
+            Controller = new Controller_Wrapper.Controller(userIndex);
             HoldDirectionThreshold = 0.25f; // time holding direction before rapidly pressing that direction
             HoldDirectionInterval = 0.09f; // how quickly to move in the held direction (0.25f = 4 times per second)
 
@@ -24,15 +21,15 @@ namespace launcherA
             fakeDown = false;
         }
 
-        public readonly UserIndex UserIndex;
-        public readonly Controller Controller;
+        public readonly Controller_Wrapper.PlayerIndex UserIndex;
+        public readonly Controller_Wrapper.Controller Controller;
 
         public DPadState DPad { get; set; }
         public DPadState DPadPrev { get; set; }
-        public ThumbstickState LeftStick { get; private set; }
-        public ThumbstickState RightStick { get; private set; }
-        public ThumbstickState LeftStickPrev { get; private set; }
-        public ThumbstickState RightStickPrev { get; private set; }
+        public Controller_Wrapper.Thumbstick LeftStick { get; private set; }
+        public Controller_Wrapper.Thumbstick RightStick { get; private set; }
+        public Controller_Wrapper.Thumbstick LeftStickPrev { get; private set; }
+        public Controller_Wrapper.Thumbstick RightStickPrev { get; private set; }
         public float LeftStickXPrev { get; set; }
         public float LeftStickYPrev { get; set; }
 
@@ -66,16 +63,18 @@ namespace launcherA
 
         public bool Connected
         {
-            get { return Controller.IsConnected; }
+            get { return Controller.Connected; }
         }
 
         public void Vibrate(float leftMotor, float rightMotor)
         {
-            Controller.SetVibration(new Vibration
+            /*Controller.SetVibration(new Vibration
             {
                 LeftMotorSpeed = (ushort)(MathHelper.Saturate(leftMotor) * ushort.MaxValue),
                 RightMotorSpeed = (ushort)(MathHelper.Saturate(rightMotor) * ushort.MaxValue)
-            });
+            });*/
+
+            // Porting to Controller_Wrapper, idgaf about vibrations
         }
 
         public void Update()
@@ -83,70 +82,51 @@ namespace launcherA
             // If not connected, nothing to update
             if (!Connected) return;
 
-            CheckHolding(); // assign fakeUp and fakeDown if holding up/down for long enough
+            
 
             // If same packet, nothing to update
-            State state = Controller.GetState();
-            if (lastPacket == state.PacketNumber) return;
-            lastPacket = state.PacketNumber;
+            Controller.Update();
+            CheckHolding(); // assign fakeUp and fakeDown if holding up/down for long enough
 
-            var gamepadState = state.Gamepad;
 
             // Shoulders
-            LeftShoulder = (gamepadState.Buttons & GamepadButtonFlags.LeftShoulder) != 0;
-            RightShoulder = (gamepadState.Buttons & GamepadButtonFlags.RightShoulder) != 0;
+            LeftShoulder = Controller.LeftShoulder;
+            RightShoulder = Controller.RightShoulder;
 
             // Triggers
-            LeftTrigger = gamepadState.LeftTrigger / (float)byte.MaxValue;
-            RightTrigger = gamepadState.RightTrigger / (float)byte.MaxValue;
+            LeftTrigger = LeftTrigger;
+            RightTrigger = RightTrigger;
 
             // Buttons
-            Start = (gamepadState.Buttons & GamepadButtonFlags.Start) != 0;
-            Back = (gamepadState.Buttons & GamepadButtonFlags.Back) != 0;
+            Start = Controller.Start;
+            Back = Controller.Back;
 
-            A = (gamepadState.Buttons & GamepadButtonFlags.A) != 0;
-            B = (gamepadState.Buttons & GamepadButtonFlags.B) != 0;
-            X = (gamepadState.Buttons & GamepadButtonFlags.X) != 0;
-            Y = (gamepadState.Buttons & GamepadButtonFlags.Y) != 0;
+            A = Controller.A;
+            B = Controller.B;
+            X = Controller.X;
+            Y = Controller.Y;
 
             // D-Pad
-            DPad = new DPadState((gamepadState.Buttons & GamepadButtonFlags.DPadUp) != 0,
-                                 (gamepadState.Buttons & GamepadButtonFlags.DPadDown) != 0,
-                                 (gamepadState.Buttons & GamepadButtonFlags.DPadLeft) != 0,
-                                 (gamepadState.Buttons & GamepadButtonFlags.DPadRight) != 0);
+            DPad = new DPadState(Controller.DPadUp,
+                                 Controller.DPadDown,
+                                 Controller.DPadLeft,
+                                 Controller.DPadRight);
 
-            LeftStick = new ThumbstickState(
-                Normalize(gamepadState.LeftThumbX, gamepadState.LeftThumbY, Gamepad.GamepadLeftThumbDeadZone),
-                (gamepadState.Buttons & GamepadButtonFlags.LeftThumb) != 0);
-            RightStick = new ThumbstickState(
-                Normalize(gamepadState.RightThumbX, gamepadState.RightThumbY, Gamepad.GamepadRightThumbDeadZone),
-                (gamepadState.Buttons & GamepadButtonFlags.RightThumb) != 0);
+            LeftStick = Controller.LeftThumbstick;
+            RightStick = Controller.RightThumbstick;
         }
 
         public void SetUDLR()
         {
-            Up = (LeftStickYPrev < 0.75 && LeftStick.Position.Y >= 0.75) || (DPad.Up && !DPadPrev.Up) || fakeUp;
-            Down = (LeftStickYPrev > -0.75 && LeftStick.Position.Y <= -0.75) || (DPad.Down && !DPadPrev.Down) || fakeDown;
+            Up = (LeftStickYPrev < 0.75 && LeftStick.Y >= 0.75) || (DPad.Up && !DPadPrev.Up) || fakeUp;
+            Down = (LeftStickYPrev > -0.75 && LeftStick.Y <= -0.75) || (DPad.Down && !DPadPrev.Down) || fakeDown;
 
-            Right = (LeftStickXPrev < 0.75 && LeftStick.Position.X >= 0.75) || (DPad.Right && !DPadPrev.Right);
-            Left = (LeftStickXPrev > -0.75 && LeftStick.Position.X <= -0.75) || (DPad.Left && !DPadPrev.Left);
+            Right = (LeftStickXPrev < 0.75 && LeftStick.X >= 0.75) || (DPad.Right && !DPadPrev.Right);
+            Left = (LeftStickXPrev > -0.75 && LeftStick.X <= -0.75) || (DPad.Left && !DPadPrev.Left);
 
             DPadPrev = DPad;
             fakeUp = false;
             fakeDown = false;
-        }
-
-        static Vector2 Normalize(short rawX, short rawY, short threshold)
-        {
-            var value = new Vector2(rawX, rawY);
-            var magnitude = value.Length();
-            var direction = value / (magnitude == 0 ? 1 : magnitude);
-
-            var normalizedMagnitude = 0.0f;
-            if (magnitude - threshold > 0)
-                normalizedMagnitude = Math.Min((magnitude - threshold) / (short.MaxValue - threshold), 1);
-
-            return direction * normalizedMagnitude;
         }
 
         public struct DPadState
@@ -156,18 +136,6 @@ namespace launcherA
             public DPadState(bool up, bool down, bool left, bool right)
             {
                 Up = up; Down = down; Left = left; Right = right;
-            }
-        }
-
-        public struct ThumbstickState
-        {
-            public readonly Vector2 Position;
-            public readonly bool Clicked;
-
-            public ThumbstickState(Vector2 position, bool clicked)
-            {
-                Clicked = clicked;
-                Position = position;
             }
         }
 

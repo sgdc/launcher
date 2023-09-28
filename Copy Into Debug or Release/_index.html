@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Testing 2</title>
+    <link href="./style.css" rel="stylesheet" />
+
+</head>
+
+<body>
+    <aside class="bg-scroll"></aside> <!-- scrolling background element -->
+    <main id="container">
+        <section id="left" class="column">
+            <img id="logoImg" src="./_logo.png" />
+            <h1 id="subtitle">Jacobus Arcade Machine</h1>
+            <nav id="gamelist-container">
+                <ul id="gameList"></ul>
+            </nav>
+            <footer>
+                <img id="qrImg" src="./_qr.png" />
+                <p id="message">Message!</p>
+            </footer>
+        </section>
+
+        <section id="main" class="column">
+            <div id="video-overlay">
+                <h1 id="gameTitle">Loading...</h1>
+                <p id="authors"><span>by Adam Gincel<br />Played 21 times (0h28m total)</span></p>
+                <p id="description">It's a video game! This is a description. Amazing. It's a video game! This is a description. Amazing. It's a video game! This is a description. Amazing. It's a video game! This is a description. Amazing. It's a video game! This is a description. Amazing. It's a video game! This is a description. Amazing.</p>
+            </div>
+            <div id="video-container">
+                <video id="video-player" autoplay muted loop>
+                    <source id="video-source" src="./videos/static.webm" type="video/webm">
+                </video>
+            </div>
+        </section>
+    </main>
+</body>
+
+
+<!-- -------------------------------------------------------- -->
+
+<script>
+    const gamesListElem = document.getElementById("gameList");
+    const gameTitleElem = document.getElementById("gameTitle");
+    const gameAuthorsElem = document.getElementById("authors");
+    const gameStatsElem = document.getElementById("stats");
+    const gameDescriptionElem = document.getElementById("description");
+
+    const messageElem = document.getElementById("message");
+    const subtitleElem = document.getElementById("subtitle");
+
+    const videoPlayerElem = document.getElementById("video-player");
+    const videoSrc = document.getElementById("video-source");
+
+    const pressStartElem = document.getElementById("pressStart");
+    
+    // config settings, games list
+    let webIO = {};
+
+    let gamesList = [];
+    
+    let selectedGame = -1;
+
+    let currentTopRow = 0; // the top row to start rendering titles from. Used to handle the case where there are more than numRows games.
+    const numRows = 999; // set to however many rows there should be
+
+    const maxNameLength = 25; // names longer than this will be truncated
+
+    let didPressStart = false;
+
+    let hasStartedBlink = false;
+    let isDebug = false; // if true, load in debug data and self-handle arrow key input.
+                        // pressing space pretends a game will load, pressing space again will pretend it unloaded. Use to test in browser without running launcher.
+
+    function ReceiveData(data) {
+        webIO = data;
+
+        if (data.games) {
+            gamesList = data.games;
+        }
+
+        if (data.pageConfig.message) {
+            messageElem.innerHTML = data.pageConfig.message.toString().replace(new RegExp("\n", 'g'), "<br />");
+        }
+
+        if (data.pageConfig.subtitle) {
+            subtitleElem.innerHTML = data.pageConfig.subtitle; 
+        }
+
+        if (!hasStartedBlink && data.pageConfig.startBlink) {
+            setInterval(BlinkStart, data.pageConfig.startBlink);
+            hasStartedBlink = true;
+        }
+
+        if (data.selectedGameIndex !== undefined && selectedGame != data.selectedGameIndex) {
+            PopulateSelectedGame(data.selectedGameIndex);
+        }
+
+        if (data.loadedGame) {
+            videoPlayerElem.pause();
+            videoSrc.setAttribute("src", "./videos/loadinggame.webm");
+            videoPlayerElem.load();
+            videoPlayerElem.play();
+            selectedGame = -1;
+        }
+    }
+
+    function Press(k) {
+        if (k == "Start")
+            didPressStart = true;
+    }
+
+    function PopulateSelectedGame(i) {
+        selectedGame = i;
+        const game = gamesList[selectedGame];
+
+        GenerateGameList(selectedGame);
+        gameTitleElem.innerHTML = game.name;
+        gameAuthorsElem.innerHTML = "<span>by " + game.devs + "<br />" + GetStatsString(game) + "</span>";
+        // gameStatsElem.innerHTML = GetStatsString(game)
+
+        gameDescriptionElem.innerHTML = game.description;
+
+        videoPlayerElem.pause();
+
+        if (game.foundVideo) {
+            videoSrc.setAttribute("src", "./games/" + game.foundVideo)
+        } else {
+            videoSrc.setAttribute("src", "./videos/" + game.videoName);
+        }
+        
+        videoPlayerElem.load();
+        videoPlayerElem.play();
+    }
+
+    function GenerateGameList(s) {
+        // generate the list of titles on the left, inside the UL element
+        CalculateTopRow(s);
+        if (gamesList.length > 0) {
+            gamesListElem.innerHTML = "";
+            for (let i = currentTopRow; i < gamesList.length && i < currentTopRow + numRows; i++) {
+                let name = GetTruncatedName(gamesList[i].name)
+                if (i == s) {
+                    gamesListElem.innerHTML += "<li class=\"selected\">" + name + "</li>";
+                } else if (i == s - 1 || (s - 1 == -1 && i == gamesList.length - 1)) {
+                    gamesListElem.innerHTML += "<li class=\"selected-minus-one\">" + name + "</li>";
+                } else if (i == s - 2 || (s - 2 == -1 && i == gamesList.length - 1) || (s - 2 == -2 && i == gamesList.length - 2)) {
+                    gamesListElem.innerHTML += "<li class=\"selected-minus-two\">" + name + "</li>";
+                } else if (i == s + 1 || (s + 1 == gamesList.length && i == 0)) {
+                    gamesListElem.innerHTML += "<li class=\"selected-plus-one\">" + name + "</li>";
+                } else if (i == s + 2 || (s + 2 == gamesList.length && i == 0) || (s + 2 == gamesList.length + 1 && i == 1)) {
+                    gamesListElem.innerHTML += "<li class=\"selected-plus-two\">" + name + "</li>";
+                } else {
+                    gamesListElem.innerHTML += "<li>" + name + "</li>";
+                }
+            }
+
+            gamesListElem.innerHTML += `<p id="leftCarrot">></p><p id="rightCarrot"><</p>`
+        }
+    }
+
+    // Generates string in the form "Plays: 19   Time Played: 01h:34m"
+    function GetStatsString(game) {
+        let time = "";
+        let hours = Math.floor(game.time / 60);
+        let days = Math.floor(hours / 24);
+        let minutes = game.time % 60;
+        if (days > 0) {
+            hours -= (24 * days);
+            time += days.toString() + "d:";
+        }
+        time += (hours < 10 ? "0" + hours.toString() : hours.toString()) + "h:" + (minutes < 10 ? "0" + minutes.toString() : minutes.toString()) + "m";
+
+        return "played " + game.plays.toString() + " times (" + time + " total)";
+    }
+
+    function CalculateTopRow(s) {
+        if (s >= currentTopRow + (numRows - 1)) {
+            currentTopRow = s - (numRows - 1);
+        } else if (s < currentTopRow) {
+            currentTopRow = s;
+        }
+
+        if (currentTopRow < 0) {
+            currentTopRow = 0;
+        }
+    }
+
+    function GetTruncatedName(n) {
+        if (n.length > maxNameLength) {
+            return n.substring(0, maxNameLength);
+        }
+        return n;
+    }
+
+    let isVisible = true;
+    function BlinkStart() {
+        /*
+        if (pressStartElem.innerHTML == "Press Start") {
+            if (!isVisible) {
+                pressStartElem.setAttribute("style", "visibility: default;");
+                isVisible = true;
+            } else {
+                pressStartElem.setAttribute("style", "visibility: hidden;");
+                isVisible = false;
+            }
+        } else {
+            pressStartElem.setAttribute("style", "visibility: default;");
+        }
+        */
+    }
+
+    if (isDebug) { // DEBUG webIO DATA - set to false if not testing the _index.html separately from the launcher
+        ReceiveData(GetDebugWebIO());
+
+        window.addEventListener("keydown", function (event) {
+            switch (event.key) {
+                case "ArrowDown":
+                    DebugKey("down");
+                    break;
+                case "ArrowUp":
+                    DebugKey("up");
+                    break;
+                case " ":
+                    DebugKey("space");
+                    break;
+                case "Enter":
+                    DebugKey("space");
+                    break;
+                default:
+                    return;
+            }
+        });
+    }
+
+    function DebugKey(k) {
+        if (k == "space") {
+            webIO.loadedGame = !webIO.loadedGame;
+            ReceiveData(webIO);
+            return;
+        }
+        let delta = 0;
+        if (k == "down")
+            delta = 1;
+        else if (k == "up")
+            delta = -1;
+
+        webIO.selectedGameIndex += delta;
+        if (webIO.selectedGameIndex < 0) {
+            webIO.selectedGameIndex = webIO.games.length - 1
+        } else if (webIO.selectedGameIndex >= webIO.games.length) {
+            webIO.selectedGameIndex = 0;
+        }
+        ReceiveData(webIO);
+    }
+
+    function GetDebugWebIO() {
+        let debugGames = [
+            { "name": "Aggressive Expansion", "description": "Race to the finish alone or with a friend with your rocket-powered battle cars! 1-2 Players.", "devs": "Adam Gincel and Kevin Quigley", "videoName": "ae.webm", "time": 1479, "plays": 6 },
+            { "name": "Arctic Mage Course", "description": "The mages of the arctic have a yearly tradition -- they head to the tropical islets of Manador, using their ice magic and their golf skills to sink shots across varied and challenging terrain. Freeze the water hazards with an ice shot, then send your ball flying. 1-4 Players.", "devs": "Adam Gincel", "videoName": "arcticmagecourse.webm", "time": 178, "plays": 5  },
+            { "name": "Innis Gambit", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit But w/ Long Title", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 2", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 3", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 4", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 5", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 6", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 7", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 11", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 12", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 13", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 14", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 15", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 16", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 111", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 112", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 113", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 114", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 115", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 116", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 121", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 122", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 123", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 124", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 125", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 126", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 131", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 132", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 133", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 134", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 135", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 },
+            { "name": "Innis Gambit 136", "description": "Outwit your opponent in a game of strategy and skill. Put your multitasking abilities to the test as you control three units in real time, and try to destroy your enemy's Base Crystal while protecting your own! 2 players.", "devs": "Adam Gincel", "videoName": "innisgambit.webm", "time": 61, "plays": 3 }
+    ];
+
+        return {
+            games: debugGames,
+            currentlySelectedGame: debugGames[0],
+            pageConfig: {
+                message: "This is a debug message for testing the _index.html file without actually running the launcher via VS. Lit.",
+                subtitle: "Jacobus Arcade Machine",
+                attractActivate: 45000,
+                attractScroll: 10000,
+                startBlink: 850,
+                borderless: false,
+                lockMouse: false
+            },
+            logo: "./_logo.png",
+            selectedGameIndex: 0,
+            staticVideoPath: "./videos/static.webm",
+            loadedGame: false
+        };
+    }
+</script>
+</html>
